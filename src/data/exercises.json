@@ -1,0 +1,70 @@
+[
+  {
+    "id": "exercise_sinewave",
+    "title": "Medición de señal senoidal",
+    "subtitle": "Período, frecuencia y amplitud",
+    "signal": "sine_1khz",
+    "steps": [
+      {
+        "type": "instruction",
+        "title": "Objetivo del ejercicio",
+        "body": "En este ejercicio vamos a medir los parámetros principales de una señal senoidal: su período T, su frecuencia f y su amplitud pico a pico Vpp.\n\nAntes de comenzar, asegurate de que el osciloscopio esté en modo de disparo automático y que el canal 1 esté habilitado."
+      },
+      {
+        "type": "theory",
+        "title": "Recordatorio teórico",
+        "body": "Una señal senoidal se puede describir con la ecuación:\n\nv(t) = A · sin(2π · f · t + φ)\n\ndonde:\n- A es la amplitud\n- f es la frecuencia en Hz\n- φ es la fase inicial\n\nEl período T es el inverso de la frecuencia: T = 1/f",
+        "concepts": ["Amplitud", "Frecuencia", "Período", "Fase"]
+      },
+      {
+        "type": "control_target",
+        "title": "Ajustar la base de tiempo",
+        "body": "Para visualizar correctamente una señal de 1 kHz necesitás ajustar la base de tiempo a 1 ms/div. De esta forma podrás ver exactamente un período completo en cada división.\n\nRotá la perilla TIME/DIV hasta que el display muestre 1 ms/div.",
+        "targetControl": "TIME_DIV",
+        "targetValue": "1ms"
+      },
+      {
+        "type": "numeric_input",
+        "title": "Ingresar la frecuencia medida",
+        "body": "Contando la cantidad de divisiones que ocupa un período completo en el display, y sabiendo que la base de tiempo está en 1 ms/div, calculá la frecuencia de la señal.",
+        "question": "¿Cuál es la frecuencia de la señal? (en Hz)",
+        "unit": "Hz",
+        "hint": "T = divisiones × ms/div, luego f = 1/T",
+        "expectedValue": 1000,
+        "tolerance": 50
+      }
+    ]
+  },
+  {
+    "id": "exercise_squarewave",
+    "title": "Identificación de señal cuadrada",
+    "subtitle": "Ciclo de trabajo y niveles lógicos",
+    "signal": "square_500hz",
+    "steps": [
+      {
+        "type": "instruction",
+        "title": "Objetivo del ejercicio",
+        "body": "En este ejercicio vas a identificar una señal cuadrada y determinar sus características principales: los niveles de tensión alto y bajo, y su ciclo de trabajo (duty cycle).\n\nUna señal cuadrada ideal tiene tiempos de subida y bajada instantáneos y alterna entre dos niveles de tensión."
+      },
+      {
+        "type": "multiple_choice",
+        "title": "Reconocimiento de la señal",
+        "question": "¿Cuál de las siguientes afirmaciones describe mejor a una señal cuadrada con duty cycle del 50%?",
+        "options": [
+          "El tiempo en nivel alto es el doble que el tiempo en nivel bajo.",
+          "El tiempo en nivel alto es igual al tiempo en nivel bajo.",
+          "La señal oscila de forma sinusoidal entre dos valores.",
+          "El período cambia en cada ciclo."
+        ],
+        "correctIndex": 1,
+        "explanation": "Cuando el duty cycle es 50%, la señal permanece en nivel alto exactamente la mitad del período y en nivel bajo la otra mitad. Por eso el tiempo en alto y en bajo son iguales."
+      },
+      {
+        "type": "theory",
+        "title": "Ciclo de trabajo",
+        "body": "El ciclo de trabajo (duty cycle) expresa qué porcentaje del período la señal permanece en nivel alto:\n\nDuty cycle = (T_alto / T_total) × 100%\n\nEjemplos comunes:\n- Señal cuadrada simétrica: DC = 50%\n- Señal de PWM: DC variable según aplicación\n- Control de motores: DC determina la velocidad media",
+        "concepts": ["Duty Cycle", "PWM", "Nivel lógico", "Tiempo de subida"]
+      }
+    ]
+  }
+]

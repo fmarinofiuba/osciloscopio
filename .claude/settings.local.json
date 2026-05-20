@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/tests/display-renderer/index.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/tests/display-renderer/main.js)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Proyectos\\\\Osciloscopio\\\\root\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(tree \"c:\\\\Proyectos\\\\Osciloscopio\\\\root\" -L 3)",
+      "PowerShell(ls -Recurse \"c:\\\\Proyectos\\\\Osciloscopio\\\\root\\\\src\" -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | ForEach-Object { $_.FullName })",
+      "PowerShell(ls -Recurse \"c:\\\\Proyectos\\\\Osciloscopio\\\\root\\\\tests\" -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | ForEach-Object { $_.FullName })",
+      "PowerShell(ls -Recurse \"c:\\\\Proyectos\\\\Osciloscopio\\\\root\\\\docs\" -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | ForEach-Object { $_.FullName })",
+      "Bash(npx tailwindcss *)",
+      "Bash(npx vite *)",
+      "Bash(Start-Sleep -Seconds 2)",
+      "Bash(Start-Sleep -Seconds 3)",
+      "Bash(Get-Content \"C:\\\\Users\\\\Fede\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Proyectos-Osciloscopio-root\\\\85a22ca1-a0a8-4afe-9211-2dbc020c7199\\\\tasks\\\\bm1zmsnmm.output\" -ErrorAction SilentlyContinue)",
+      "Bash(npx playwright *)",
+      "Bash(node -e \"require\\('playwright'\\)\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Proyectos\\\\Osciloscopio\\\\root\" -Recurse -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 20)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5175/)"
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+[
+  {
+    "id": "trigger",
+    "title": "Trigger (Disparo)",
+    "icon": "⚡",
+    "summary": "Mecanismo de sincronización que estabiliza la imagen en el display.",
+    "content": "El trigger es el mecanismo que permite al osciloscopio capturar y mostrar una señal estable. Sin disparo, la forma de onda se vería desplazándose continuamente y sería imposible realizar mediciones precisas.\n\nCuando se configura el trigger, el osciloscopio espera hasta que la señal alcance el nivel de disparo (trigger level) con la pendiente correcta (ascendente o descendente) antes de comenzar a dibujar la traza.\n\nEsto garantiza que cada barrido comience en el mismo punto de la señal, generando una imagen estática y estable.",
+    "concepts": ["Trigger Level", "Slope (pendiente)", "Trigger Mode", "Auto / Normal / Single"],
+    "sections": [
+      {
+        "subtitle": "Modos de trigger",
+        "body": "Auto: el osciloscopio se dispara periódicamente aunque no haya señal. Útil para exploraciones iniciales.\n\nNormal: el sweep sólo ocurre cuando se cumple la condición de trigger. Útil con señales periódicas.\n\nSingle: captura un único evento y congela el display. Ideal para señales transitorias."
+      },
+      {
+        "subtitle": "Nivel de trigger",
+        "body": "El nivel de trigger define la tensión umbral en la que ocurre el disparo. Debe ajustarse dentro del rango de amplitud de la señal para obtener un disparo estable."
+      }
+    ]
+  },
+  {
+    "id": "vertical_scale",
+    "title": "Escala Vertical (V/div)",
+    "icon": "↕",
+    "summary": "Controla la sensibilidad vertical y determina cuántos voltios representa cada división.",
+    "content": "La escala vertical, expresada en Voltios por división (V/div), determina la amplitud que corresponde a cada cuadrado de la grilla en el eje vertical.\n\nAl aumentar la escala (más V/div), se puede medir señales de mayor amplitud pero con menor resolución. Al reducirla (menos V/div), se aumenta la resolución pero la señal puede quedar fuera del rango visible si su amplitud supera el área del display.",
+    "concepts": ["V/div", "Sensibilidad vertical", "Offset vertical", "Coupling (AC/DC)"],
+    "sections": [
+      {
+        "subtitle": "Coupling AC / DC",
+        "body": "DC coupling: muestra la señal completa incluyendo la componente continua (DC offset).\n\nAC coupling: bloquea la componente DC mediante un capacitor serie, mostrando sólo las variaciones de la señal. Útil cuando hay una componente DC grande que desplaza la señal fuera del rango visible."
+      }
+    ]
+  },
+  {
+    "id": "time_base",
+    "title": "Base de Tiempo (Time/div)",
+    "icon": "⟶",
+    "summary": "Controla la velocidad de barrido horizontal y determina cuánto tiempo representa cada división.",
+    "content": "La base de tiempo, expresada en tiempo por división (ms/div, µs/div, etc.), controla cuánto tiempo transcurre en el eje horizontal por cada división de la grilla.\n\nPara visualizar correctamente una señal periódica, es conveniente ajustar la base de tiempo para que se vean entre 2 y 5 períodos completos en el display. Esto facilita la medición visual del período.",
+    "concepts": ["Time/div", "Frecuencia de muestreo", "Ventana temporal", "Zoom temporal"],
+    "sections": [
+      {
+        "subtitle": "Relación con la frecuencia",
+        "body": "Si querés ver una señal de frecuencia f, el período es T = 1/f. Para ver al menos 2 períodos en 10 divisiones, necesitás:\n\nTime/div ≤ T / 5\n\nEjemplo: para f = 1 kHz → T = 1 ms → Time/div ≤ 200 µs"
+      }
+    ]
+  },
+  {
+    "id": "sampling",
+    "title": "Muestreo (Sampling)",
+    "icon": "∿",
+    "summary": "Proceso de conversión de la señal analógica a valores digitales discretos.",
+    "content": "Los osciloscopios digitales convierten la señal analógica en una secuencia de valores numéricos tomando muestras a intervalos regulares. La frecuencia de muestreo (sample rate) determina cuántas muestras por segundo se capturan.\n\nUna mayor frecuencia de muestreo permite representar señales de más alta frecuencia con mayor fidelidad.",
+    "concepts": ["Sample Rate", "ADC", "Resolución vertical", "Record length"],
+    "sections": [
+      {
+        "subtitle": "Teorema de Nyquist",
+        "body": "Para representar fielmente una señal de frecuencia f, la frecuencia de muestreo debe ser al menos 2f (teorema de Nyquist-Shannon). En la práctica se recomienda 5 a 10 veces la frecuencia de la señal para obtener una buena forma de onda."
+      }
+    ]
+  },
+  {
+    "id": "aliasing",
+    "title": "Aliasing",
+    "icon": "〜",
+    "summary": "Distorsión causada por muestreo insuficiente que genera frecuencias falsas.",
+    "content": "El aliasing ocurre cuando la frecuencia de muestreo es insuficiente para representar correctamente la señal. El resultado es que el osciloscopio muestra una frecuencia más baja que la real, o incluso una señal completamente distorsionada.\n\nEsto puede llevar a lecturas incorrectas y diagnósticos erróneos si no se reconoce el fenómeno.",
+    "concepts": ["Frecuencia de Nyquist", "Anti-aliasing filter", "Submuestreo", "Señal fantasma"],
+    "sections": [
+      {
+        "subtitle": "Cómo detectarlo",
+        "body": "Si la forma de onda parece inestable, o si la frecuencia aparente cambia drásticamente al ajustar la base de tiempo, es probable que estés observando aliasing. Aumentá la frecuencia de muestreo o reducí la base de tiempo."
+      }
+    ]
+  },
+  {
+    "id": "acquisition_modes",
+    "title": "Modos de Adquisición",
+    "icon": "◈",
+    "summary": "Distintas estrategias para capturar y procesar los datos de la señal.",
+    "content": "Los osciloscopios digitales ofrecen distintos modos de adquisición que afectan cómo se procesan las muestras antes de mostrarlas en el display.",
+    "concepts": ["Sample mode", "Peak detect", "Average", "High resolution"],
+    "sections": [
+      {
+        "subtitle": "Modos principales",
+        "body": "Sample (Normal): cada punto del display corresponde a una muestra. Modo más rápido.\n\nPeak Detect: captura el pico máximo y mínimo de múltiples muestras por punto del display. Útil para detectar glitches.\n\nAverage: promedia múltiples adquisiciones. Reduce el ruido aleatorio pero no muestra eventos transitorios."
+      }
+    ]
+  }
+]
