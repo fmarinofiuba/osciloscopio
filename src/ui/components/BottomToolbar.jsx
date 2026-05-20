@@ -2,7 +2,6 @@ import { useAppState } from '../../state/AppContext.jsx'
 
 const CAMERA_PRESETS = [
   { key: 'frontal',  label: 'Frontal'  },
-  { key: 'lateral',  label: 'Lateral'  },
   { key: 'diagonal', label: 'Diagonal' },
   { key: 'display',  label: 'Display'  },
   { key: 'general',  label: 'General'  },
@@ -97,22 +96,6 @@ export default function BottomToolbar() {
           ⛶ Full
         </button>
 
-        {/* Spacer + test links (dev convenience) */}
-        <div className="flex-1" />
-        <a
-          href="/tests/display-renderer/index.html"
-          target="_blank"
-          className={btnBase + ' opacity-40 hover:opacity-70 text-[10px]'}
-        >
-          DisplayRenderer test
-        </a>
-        <a
-          href="/tests/camera-controller/index.html"
-          target="_blank"
-          className={btnBase + ' opacity-40 hover:opacity-70 text-[10px]'}
-        >
-          Camera test
-        </a>
       </div>
     </div>
   )

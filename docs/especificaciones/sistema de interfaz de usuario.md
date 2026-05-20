@@ -456,7 +456,12 @@ Cuando Explicar está activo:
 
 - el raycasting continúa funcionando,
 - los controles no modifican estados reales,
-- se muestra información contextual del control seleccionado.
+- se muestra información contextual del control seleccionado,
+- los tooltips flotantes sobre los controles se muestran al hacer hover.
+
+Cuando Explicar está inactivo:
+
+- los tooltips flotantes NO se muestran (la interacción es directa y silenciosa).
 
 ---
 
@@ -664,7 +669,6 @@ Accesos directos para mover rápidamente la cámara a vistas predefinidas.
 Ejemplos:
 
 - vista frontal,
-- vista lateral,
 - zoom sobre display,
 - zoom sobre controles,
 - vista general.

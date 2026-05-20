@@ -82,8 +82,8 @@ function AppInner() {
         <BottomToolbar />
       </div>
 
-      {/* 3D Tooltip — absolutely positioned over canvas */}
-      <Tooltip3D tooltip={tooltip} />
+      {/* 3D Tooltip — solo visible cuando el modo Explicar está activo */}
+      {state.interactionMode === 'explicar' && <Tooltip3D tooltip={tooltip} />}
     </div>
   )
 }

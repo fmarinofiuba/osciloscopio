@@ -255,7 +255,7 @@ La detección de interacción se realizará mediante raycasting.
 Cuando el cursor pase sobre un control interactivo:
 
 - el control marcara con un Outline (Outline Pass de EffectsComposer de Three.js, es una pasada 2D que marca outlines)
-- podrá mostrarse un tooltip flotante (habra un retardo de msec para que aparezca).
+- podrá mostrarse un tooltip flotante (habra un retardo de msec para que aparezca), solo cuando el Modo Explicar esté activo.
 
 ## Tooltips
 
@@ -263,7 +263,8 @@ Los tooltips:
 
 - serán sprites/texturas dinámicas en Three.js que se generarán al iniciar la aplicación (se puede crear un atlas y usar UVs para mapear la celda especifica)
 - mostrarán información cargada desde JSON,
-- podrán incluir: nombre, descripción, valor actual.
+- podrán incluir: nombre, descripción, valor actual,
+- solo se mostrarán cuando el Modo Explicar esté activo desde la barra inferior. Con Explicar OFF no se renderizan.
 
 ---
 
@@ -477,7 +478,10 @@ Cuando el modo Explicar está activo:
 
 - los controles del osciloscopio no ejecutan acciones reales,
 - al hacer click sobre un control se despliega información contextual sobre dicho control,
-- el panel contextual se expande automáticamente para mostrar la explicación correspondiente.
+- el panel contextual se expande automáticamente para mostrar la explicación correspondiente,
+- los tooltips flotantes sobre los controles se muestran al hacer hover.
+
+Cuando el modo Explicar está inactivo, los tooltips flotantes no se renderizan.
 
 La explicación podrá incluir:
 
