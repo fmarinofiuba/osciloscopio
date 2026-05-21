@@ -19,7 +19,7 @@ export class CameraController {
     );
     this.camera.position.copy(initialOrigin);
 
-    this.polarMin = options.polarMin ?? 0.05;
+    this.polarMin = options.polarMin ?? 0.0;
     this.polarMax = options.polarMax ?? Math.PI / 2;
     this.azimuthMin = options.azimuthMin ?? -Infinity;
     this.azimuthMax = options.azimuthMax ?? Infinity;
@@ -288,7 +288,7 @@ export class CameraController {
     // Escala del paneo proporcional a la distancia (más alejado, más rápido).
     const scale = this.panSpeed * distance;
     this.target.addScaledVector(rightXZ, -dx * scale);
-    this.target.addScaledVector(forwardXZ, -dy * scale);
+    this.target.addScaledVector(forwardXZ, dy * scale);
 
     if (this.constraints.targetBounds) {
       this.target.x = clamp(

@@ -21,7 +21,14 @@
       "Bash(node -e \"require\\('playwright'\\)\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Proyectos\\\\Osciloscopio\\\\root\" -Recurse -ErrorAction SilentlyContinue)",
       "Bash(Select-Object -First 20)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5175/)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5175/)",
+      "Bash(grep -E \"\\\\.js$|\\\\.jsx$\")",
+      "Bash(node scripts/smoke.mjs)",
+      "Bash(curl -s http://localhost:5174/)",
+      "Bash(curl -s http://localhost:5174/src/App.jsx -o NUL -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:5174/src/signals/InputSignalManager.js -o NUL -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:5174/src/ui/workspace/LaboratorioMode.jsx -o NUL -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:5174/src/exercises/ExerciseManager.js -o NUL -w \"HTTP %{http_code}\\\\n\")"
     ]
   }
 }

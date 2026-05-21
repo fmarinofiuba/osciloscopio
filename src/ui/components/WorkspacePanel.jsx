@@ -25,7 +25,7 @@ export default function WorkspacePanel() {
         className="
           pointer-events-auto
           flex flex-col
-          w-[340px] max-w-[35vw] min-w-[280px]
+          w-[400px] max-w-[35vw] min-w-[280px]
           h-full
           glass-panel
           border-l border-panel-border

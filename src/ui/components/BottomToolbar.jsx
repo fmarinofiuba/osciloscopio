@@ -1,8 +1,7 @@
 import { useAppState } from '../../state/AppContext.jsx'
 
 const CAMERA_PRESETS = [
-  { key: 'frontal',  label: 'Frontal'  },
-  { key: 'diagonal', label: 'Diagonal' },
+  { key: 'frontal',  label: 'Frontal'  },  
   { key: 'display',  label: 'Display'  },
   { key: 'general',  label: 'General'  },
 ]
@@ -16,20 +15,10 @@ const divider = 'w-px h-5 bg-white/10 mx-1'
 
 export default function BottomToolbar() {
   const { state, dispatch, sceneRef } = useAppState()
-  const isExplicar = state.interactionMode === 'explicar'
 
   function goToView(key) {
     dispatch({ type: 'SET_CAMERA_PRESET', payload: key })
     sceneRef.current?.transitionToView(key)
-  }
-
-  function resetCamera() {
-    dispatch({ type: 'SET_CAMERA_PRESET', payload: 'frontal' })
-    sceneRef.current?.transitionToView('frontal')
-  }
-
-  function toggleExplicar() {
-    dispatch({ type: 'TOGGLE_EXPLICAR' })
   }
 
   function toggleFullscreen() {
@@ -57,41 +46,10 @@ export default function BottomToolbar() {
             {label}
           </button>
         ))}
-        <button onClick={resetCamera} className={btnBase} title="Reset cámara">
-          ↺ Reset
-        </button>
-
-        <div className={divider} />
-
-        {/* Explicar toggle */}
-        <button
-          onClick={toggleExplicar}
-          className={
-            btnBase +
-            (isExplicar
-              ? ' text-amber-300 border-amber-400/50 bg-amber-400/10 hover:bg-amber-400/20'
-              : '')
-          }
-        >
-          <span className={isExplicar ? 'text-amber-300' : ''}>💡</span>
-          Explicar
-          {isExplicar && (
-            <span className="ml-1 text-[10px] bg-amber-400/20 text-amber-300 px-1 rounded">
-              ON
-            </span>
-          )}
-        </button>
 
         <div className={divider} />
 
         {/* Quick actions */}
-        <button
-          onClick={() => dispatch({ type: 'SET_INTERACTION_MODE', payload: 'interact' })}
-          className={btnBase}
-          title="Reset osciloscopio"
-        >
-          ⟳ Reset
-        </button>
         <button onClick={toggleFullscreen} className={btnBase} title="Pantalla completa">
           ⛶ Full
         </button>

@@ -8,7 +8,6 @@ import { ModelLoader } from "./ModelLoader.js";
 import { InteractionSystem } from "./InteractionSystem.js";
 import { ControlsState } from "./ControlsState.js";
 import { DisplayRenderer } from "../display/DisplayRenderer.js";
-import { SineSignal } from "../signals/SineSignal.js";
 import controlsConfig from "../data/controls.json";
 
 export class SceneManager {
@@ -36,6 +35,13 @@ export class SceneManager {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color("#cccccc");
 
+    // Equirectangular 360 background
+    new THREE.TextureLoader().load("/maps/background01.png", (texture) => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      this.scene.background = texture;
+    });
+
     // Camera
     this.camera = new THREE.PerspectiveCamera(
       50,
@@ -50,6 +56,7 @@ export class SceneManager {
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this._keyLight = null;
 
     // Lights — tuned for light gray background
     const ambient = new THREE.AmbientLight(0xffffff, 1.0);
@@ -65,8 +72,15 @@ export class SceneManager {
     keyLight.shadow.camera.right = 0.5;
     keyLight.shadow.camera.top = 0.5;
     keyLight.shadow.camera.bottom = -0.5;
+    keyLight.shadow.normalBias = 0.001;
     //keyLight.shadow.bias = 0.7555;
     this.scene.add(keyLight);
+    this._keyLight = keyLight;
+
+    if (typeof window !== "undefined") {
+      window.renderer = this.renderer;
+      window.keyLight = keyLight;
+    }
 
     const fillLight = new THREE.DirectionalLight(0xd0e8ff, 0.6);
     fillLight.position.set(-0.5, 0.3, -0.5);
@@ -75,10 +89,10 @@ export class SceneManager {
     // Grid and axes — tenue, reference only
     const grid = new THREE.GridHelper(1, 20, 0xbbbbbb, 0xdddddd);
     grid.position.y = 0;
-    this.scene.add(grid);
+    //this.scene.add(grid);
 
     const axes = new THREE.AxesHelper(0.15);
-    this.scene.add(axes);
+    //this.scene.add(axes);
 
     this._targetAxes = new THREE.AxesHelper(1);
     // this.scene.add(this._targetAxes);
@@ -87,7 +101,7 @@ export class SceneManager {
     this.cameraController = new CameraController(this.camera, canvas, {
       radiusMin: 0.12,
       radiusMax: 1.8,
-      polarMin: 0.05,
+      polarMin: 0.0,
       polarMax: Math.PI / 2.1,
       targetBounds: { minX: -0.3, maxX: 0.3, minZ: -0.3, maxZ: 0.3 },
     });
@@ -104,9 +118,9 @@ export class SceneManager {
       this.camera,
     );
     this._outlinePass.edgeStrength = 4;
-    this._outlinePass.edgeGlow = 0;
-    this._outlinePass.edgeThickness = 1.2;
-    this._outlinePass.pulsePeriod = 0;
+    this._outlinePass.edgeGlow = 1;
+    this._outlinePass.edgeThickness = 2;
+    this._outlinePass.pulsePeriod = 1;
     this._outlinePass.visibleEdgeColor.set("#4da6ff");
     this._outlinePass.hiddenEdgeColor.set("#000000");
     this._composer.addPass(this._outlinePass);
@@ -117,7 +131,7 @@ export class SceneManager {
 
     // Load GLTF model
     try {
-      const model = await ModelLoader.load("/models/osciloscopio.glb");
+      const model = await ModelLoader.load("models/osciloscopio.glb");
       model.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
@@ -164,8 +178,6 @@ export class SceneManager {
     }
 
     this._displayRenderer = new DisplayRenderer({ width: 512, height: 256 });
-    const signal = new SineSignal({ amplitude: 3, frequency: 1000, phase: 0 });
-    this._displayRenderer.signal = signal;
     this._displayRenderer.triggerLevel = 0;
     this._displayRenderer.voltsPerDiv = 1;
     this._displayRenderer.timePerDiv = 1e-3;
@@ -215,6 +227,10 @@ export class SceneManager {
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
+
+  getDisplayRenderer() {
+    return this._displayRenderer;
+  }
 
   transitionToView(name) {
     this.cameraController?.setView(name);

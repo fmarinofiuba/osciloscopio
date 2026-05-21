@@ -3,7 +3,13 @@
     "id": "exercise_sinewave",
     "title": "Medición de señal senoidal",
     "subtitle": "Período, frecuencia y amplitud",
-    "signal": "sine_1khz",
+    "ch1": {
+      "type": "sine",
+      "amplitude": 3,
+      "frequency": 1000,
+      "phase": 0,
+      "offset": 0
+    },
     "steps": [
       {
         "type": "instruction",
@@ -39,7 +45,14 @@
     "id": "exercise_squarewave",
     "title": "Identificación de señal cuadrada",
     "subtitle": "Ciclo de trabajo y niveles lógicos",
-    "signal": "square_500hz",
+    "ch1": {
+      "type": "square",
+      "amplitude": 3,
+      "frequency": 500,
+      "phase": 0,
+      "offset": 0,
+      "dutyCycle": 0.5
+    },
     "steps": [
       {
         "type": "instruction",

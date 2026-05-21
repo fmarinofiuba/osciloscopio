@@ -19,7 +19,7 @@ function StepBlock({ step, onValidated }) {
 }
 
 export default function ExerciseWizard() {
-  const { state, dispatch } = useAppState()
+  const { state, exerciseManagerRef } = useAppState()
   const exercise = exercises.find((e) => e.id === state.activeExercise)
 
   if (!exercise) return null
@@ -33,17 +33,17 @@ export default function ExerciseWizard() {
 
   function goBack() {
     if (isFirst) {
-      dispatch({ type: 'END_EXERCISE' })
+      exerciseManagerRef.current?.end()
     } else {
-      dispatch({ type: 'PREV_STEP' })
+      exerciseManagerRef.current?.prev()
     }
   }
 
   function goNext() {
     if (isLast) {
-      dispatch({ type: 'END_EXERCISE' })
+      exerciseManagerRef.current?.end()
     } else {
-      dispatch({ type: 'NEXT_STEP' })
+      exerciseManagerRef.current?.next()
     }
   }
 

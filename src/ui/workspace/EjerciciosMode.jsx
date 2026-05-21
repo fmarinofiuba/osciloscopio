@@ -3,12 +3,12 @@ import exercises from '../../data/exercises.json'
 import ExerciseWizard from '../exercises/ExerciseWizard.jsx'
 
 const SIGNAL_ICONS = {
-  sine_1khz: '〜',
-  square_500hz: '⊓',
+  sine:   '〜',
+  square: '⊓',
 }
 
 export default function EjerciciosMode() {
-  const { state, dispatch } = useAppState()
+  const { state, exerciseManagerRef } = useAppState()
 
   if (state.activeExercise) {
     return <ExerciseWizard />
@@ -25,7 +25,7 @@ export default function EjerciciosMode() {
         {exercises.map((ex) => (
           <button
             key={ex.id}
-            onClick={() => dispatch({ type: 'START_EXERCISE', payload: ex.id })}
+            onClick={() => exerciseManagerRef.current?.start(ex.id)}
             className="
               w-full text-left p-3 rounded-xl border border-panel-border
               bg-white/3 hover:bg-white/7 hover:border-white/15
@@ -35,7 +35,7 @@ export default function EjerciciosMode() {
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl mt-0.5 group-hover:scale-110 transition-transform">
-                {SIGNAL_ICONS[ex.signal] ?? '📊'}
+                {SIGNAL_ICONS[ex.ch1?.type] ?? '📊'}
               </span>
               <div className="flex-1 min-w-0">
                 <p className="text-text-primary text-sm font-medium leading-tight">

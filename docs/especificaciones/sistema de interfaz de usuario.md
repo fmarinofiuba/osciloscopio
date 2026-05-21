@@ -26,7 +26,7 @@ La UI no deberá sentirse como una aplicación web tradicional con paneles perma
 
 La interfaz deberá priorizar:
 
-- máxima visibilidad del osciloscopio,
+- visibilidad clara del osciloscopio,
 - mínima obstrucción del viewport,
 - aparición contextual de información,
 - simplicidad visual,
@@ -37,6 +37,7 @@ La interfaz deberá priorizar:
 La experiencia principal deberá centrarse en:
 
 - interacción directa con el instrumento,
+- configuración explícita de señales de entrada,
 - exploración visual,
 - manipulación espacial.
 
@@ -48,15 +49,17 @@ La interfaz se dividirá en dos componentes principales:
 
 ## 1. Panel Workspace
 
-Panel contextual expandible ubicado sobre el borde derecho de la pantalla.
+Panel contextual lateral expandible ubicado sobre el borde derecho de la pantalla.
 
 Responsable de:
 
-- ejercicios,
+- configuración de señales de entrada (Laboratorio),
+- inspección educativa de controles (Explicar),
+- ejercicios guiados,
 - documentación,
-- ayuda contextual,
-- configuraciones,
-- contenido educativo.
+- configuraciones generales.
+
+A diferencia de la iteración anterior, el panel Workspace tiene contenido persistente: por defecto la aplicación arranca con el panel expandido en la sección Laboratorio.
 
 ---
 
@@ -66,954 +69,441 @@ Barra horizontal inferior siempre visible.
 
 Responsable de:
 
-- acciones rápidas,
-- toggles globales,
-- accesos rápidos de navegación,
-- controles de cámara,
-- herramientas de interacción.
+- accesos rápidos de cámara,
+- reset de cámara y de osciloscopio,
+- pantalla completa.
+
+La barra inferior ya NO contiene el toggle "Explicar"; el modo Explicar ahora es una sección del menú principal.
 
 ---
 
-# 4. Filosofía general de funcionamiento
+# 4. Estados visuales del Panel Workspace
 
-El panel contextual NO deberá permanecer abierto permanentemente.
-
-El panel aparecerá únicamente cuando exista contenido relevante para mostrar.
-
-Esto permite:
-
-- maximizar el área útil 3D,
-- mejorar la inmersión,
-- evitar paneles vacíos,
-- mantener el foco en el instrumento.
-
-La aplicación debe sentirse principalmente como:
-
-- un instrumento interactivo,
-- un simulador,
-- una experiencia espacial.
-
-No debe sentirse como:
-
-- una aplicación administrativa,
-- una IDE,
-- un dashboard,
-- una web tradicional basada en paneles.
-
----
-
-# 5. Estados visuales del Panel Workspace
-
-El panel tendrá tres estados conceptuales.
-
----
+El panel tendrá tres estados conceptuales:
 
 ## Oculto
 
-El panel no ocupa espacio visual.
-
-Solo permanece visible:
-
-- la bottom toolbar.
-
-Este estado puede utilizarse opcionalmente para modos pantalla completa extremos.
-
----
+El panel no ocupa espacio visual. Solo permanece visible la barra inferior. Este estado se reserva para escenarios de pantalla completa extrema y no se utiliza durante la operación normal.
 
 ## Launcher compacto
 
-Estado reducido utilizado normalmente durante Explorar Mode.
+Estado reducido cuando el usuario colapsa explícitamente el panel mediante el botón "✕" del header.
 
-El panel se representa como un launcher flotante compacto.
-
-Ejemplo conceptual:
+El panel se representa como un launcher flotante compacto en la esquina superior derecha, etiquetado:
 
 ```text
 ╭──────────────╮
-│ Explorar ▸    │
+│ ◎ Menú ▸     │
 ╰──────────────╯
 ```
 
-Este launcher:
-
-- no despliega dropdowns,
-- no abre menús contextuales flotantes,
-- no utiliza navegación compleja.
-
-Al hacer click:
-
-- el workspace se expande completamente.
-
----
+Al hacer click sobre el launcher, el panel se expande nuevamente y aterriza por defecto en la sección **Laboratorio**.
 
 ## Workspace expandido
 
-Estado completo del panel.
-
-Ocupará aproximadamente:
-
-- 30% a 35% del ancho de pantalla.
-
-Contendrá:
-
-- header,
-- contenido central,
-- footer contextual.
+Estado completo del panel. Ocupará aproximadamente 30% a 35% del ancho de pantalla. Contendrá header (pestañas de modo), contenido central y footer contextual.
 
 Ejemplo conceptual:
 
 ```text
-╭────────────────────────────────╮
-│ Explorar Ejercicios Manual Configuración     │
-├────────────────────────────────┤
-│                                │
-│        contextual content      │
-│                                │
-│                                │
-├────────────────────────────────┤
-│ Anterior      Siguiente             │
-╰────────────────────────────────╯
+╭───────────────────────────────────────────────╮
+│ Laboratorio  Explicar  Ejercicios  Manual  ⚙  ✕│
+├───────────────────────────────────────────────┤
+│                                               │
+│        contenido contextual del modo          │
+│                                               │
+├───────────────────────────────────────────────┤
+│ (acciones contextuales — opcional)            │
+╰───────────────────────────────────────────────╯
 ```
 
 ---
 
-# 6. Apariencia visual del panel
+# 5. Apariencia visual del panel
 
-## Estilo visual
+El panel deberá ser semitransparente, moderno, minimalista y liviano visualmente. No deberá sentirse como una ventana rígida tradicional.
 
-El panel deberá ser:
-
-- semitransparente,
-- moderno,
-- minimalista,
-- liviano visualmente.
-
-No deberá sentirse como una ventana rígida tradicional.
-
----
-
-## Características visuales
+Características visuales:
 
 - transparencia parcial,
 - sombras suaves,
 - bordes redondeados,
 - transiciones animadas,
-- slide in / slide out,
-- overlays suaves.
+- slide in / slide out.
+
+No se utilizará blur complejo en tiempo real como requerimiento obligatorio.
 
 ---
 
-## Importante
+# 6. Launcher flotante
 
-No se utilizará blur complejo en tiempo real como requerimiento obligatorio debido a posibles costos de performance.
+El launcher representa el estado colapsado del Workspace. No es un widget independiente.
 
----
+Al hacer click se expande el panel completo y se navega automáticamente a la sección **Laboratorio**.
 
-# 7. Launcher flotante
-
-## Objetivo
-
-Permitir acceder al workspace sin ocupar espacio permanente.
+No existen dropdowns, popups de navegación ni submenús flotantes desde el launcher. La navegación entre secciones solo existe dentro del workspace expandido.
 
 ---
 
-## Ubicación
+# 7. Secciones del menú principal del Workspace
 
-Preferentemente:
-
-- esquina superior derecha.
-
----
-
-## Comportamiento
-
-El launcher representa el estado colapsado del workspace.
-
-NO es un widget independiente.
-
-Al hacer click:
-
-- el panel contextual completo se expande.
-
-No existirán:
-
-- dropdowns,
-- popups de navegación,
-- submenús flotantes,
-- navegación tipo menú hamburguesa tradicional.
-
-La navegación principal solo existirá dentro del workspace expandido.
-
----
-
-# 8. Navegación principal del Workspace
-
-La navegación principal NO deberá representar tabs tradicionales de contenido.
-
-Representará modos globales de aplicación.
-
----
-
-## Modos principales
-
-### Explorar
-
-Modo inmersivo de exploración e interacción libre.
-
----
-
-### Ejercicios
-
-Modo de ejercicios guiados.
-
----
-
-### Manual
-
-Modo de documentación y teoría.
-
----
-
-### Configuración
-
-Modo de configuración general.
-
----
-
-# 9. Comportamiento especial de Explorar Mode
-
-Explorar Mode es conceptualmente distinto de los demás modos.
-
-Mientras:
-
-- Ejercicios,
-- Manual,
-- Configuración
-
-requieren contenido persistente y panel expandido,
-
-Explorar prioriza:
-
-- viewport 3D,
-- inmersión,
-- interacción directa.
-
----
-
-## Regla principal
-
-Cuando Explorar es seleccionado:
-
-- el workspace se colapsa automáticamente,
-- el sistema retorna al estado Launcher compacto.
-
-Por lo tanto:
-
-Explorar NO funciona realmente como una tab persistente.
-
-Funciona más como:
+La navegación principal del Workspace representa cinco **modos de trabajo** mutuamente excluyentes:
 
 ```text
-Volver al instrumento
-```
-
-aunque visualmente siga apareciendo como:
-
-```text
-Explorar
-```
-
----
-
-## Ejemplo de transición
-
-### Estado inicial
-
-```text
-Workspace expandido + Ejercicios
-```
-
----
-
-### Usuario selecciona
-
-```text
-Explorar
-```
-
----
-
-### Resultado
-
-```text
-workspace collapses
-→ compact launcher visible
-→ viewport maximized
-```
-
----
-
-# 10. Explorar Mode
-
-## Objetivo
-
-Permitir manipulación libre del osciloscopio.
-
-El viewport 3D deberá ser prioritario.
-
----
-
-## Características
-
-En este modo:
-
-- el panel normalmente permanecerá colapsado,
-- el usuario podrá interactuar directamente con el instrumento,
-- la UI visible será mínima.
-
----
-
-## Estado normal esperado
-
-- Launcher compacto visible,
-- Barra inferior visible,
-- panel contextual oculto.
-
----
-
-## Expansión temporal del panel
-
-Incluso durante Explorar Mode el panel podrá expandirse temporalmente cuando exista contenido contextual.
-
-Ejemplos:
-
-- Modo Explicar activo,
-- ayuda contextual,
-- overlays,
-- contenido asociado a controles.
-
----
-
-# 11. Interaction Policies
-
-La interacción del usuario con el osciloscopio dependerá de una política activa de interacción.
-
-Esto es independiente del Workspace Mode.
-
----
-
-## Políticas de interacción
-
-### Interact
-
-Modo normal.
-
-Los controles del osciloscopio responden normalmente.
-
-Ejemplos:
-
-- mover knobs,
-- presionar botones,
-- cambiar escalas.
-
----
-
-### Explicar
-
-Modo educativo/contextual.
-
-Los controles NO ejecutan acciones reales.
-
-Al seleccionar un control:
-
-- se despliega información contextual,
-- el panel se expande automáticamente,
-- se muestra descripción y ayuda asociada.
-
----
-
-### Disabled
-
-Modo opcional para bloquear interacción.
-
----
-
-# 12. Modo Explicar
-
-## Naturaleza conceptual
-
-Explicar NO es un Workspace Mode.
-
-NO aparece dentro de la navegación principal.
-
-Es una herramienta transversal activada desde la Barra inferior.
-
----
-
-## Funcionamiento
-
-Cuando Explicar está activo:
-
-- el raycasting continúa funcionando,
-- los controles no modifican estados reales,
-- se muestra información contextual del control seleccionado,
-- los tooltips flotantes sobre los controles se muestran al hacer hover.
-
-Cuando Explicar está inactivo:
-
-- los tooltips flotantes NO se muestran (la interacción es directa y silenciosa).
-
----
-
-## Ejemplo
-
-Usuario selecciona:
-
-```text
-VOLTS/DIV CH1
-```
-
-El panel se expande automáticamente mostrando:
-
-- nombre,
-- descripción,
-- funcionamiento,
-- ejemplos,
-- imágenes opcionales,
-- links relacionados al Manual.
-
----
-
-# 13. Ejercicios Mode
-
-## Objetivo
-
-Guiar al usuario mediante ejercicios secuenciales.
-
----
-
-## Funcionamiento general
-
-El panel permanecerá expandido durante los ejercicios.
-
-La interfaz funcionará como un wizard o asistente paso a paso.
-
----
-
-# 14. Layout de ejercicios
-
-## Header
-
-Mostrará:
-
-- nombre del ejercicio,
-- progreso,
-- número de paso.
-
-Ejemplo:
-
-```text
-Measuring a sine wave
-Step 2 / 5
-```
-
----
-
-## Área central
-
-Podrá contener:
-
-- consignas,
-- teoría,
-- imágenes,
-- inputs,
-- hints,
-- validaciones,
-- instrucciones.
-
----
-
-## Footer
-
-Botones contextuales.
-
-Ejemplo:
-
-```text
-[ Anterior ] [ Pista ] [ Validar ] [ Siguiente ]
-```
-
----
-
-# 15. Arquitectura de ejercicios
-
-Los ejercicios NO deberán implementarse como páginas HTML arbitrarias.
-
-Deberán construirse mediante bloques reutilizables configurados por JSON.
-
----
-
-## Tipos posibles de bloques
-
-```text
-instruction
-numeric_input
-multiple_choice
-interactive_validation
-control_target
-theory_block
-image_block
-```
-
----
-
-# 16. Manual Mode
-
-## Objetivo
-
-Mostrar documentación educativa general.
-
-No depende de la selección de controles.
-
----
-
-## Diferencia respecto de Explicar
-
-### Explicar
-
-- contextual,
-- rápido,
-- asociado a un control específico.
-
----
-
-### Manual
-
-- navegación documental,
-- teoría,
-- tutoriales,
-- conceptos generales.
-
----
-
-# 17. Contenido del Manual
-
-Ejemplos:
-
-- Trigger
-- Vertical Scale
-- Time Base
-- Sampling
-- Aliasing
-- Measurements
-- Acquisition Modes
-
----
-
-# 18. Configuración Mode
-
-## Objetivo
-
-Permitir configuración global de la aplicación.
-
----
-
-## Posibles configuraciones
-
-- idioma,
-- calidad gráfica,
-- sensibilidad de drag,
-- volumen,
-- tema visual,
-- escala UI,
-- accesibilidad,
-- restaurar configuración.
-
----
-
-# 19. Barra inferior
-
-## Objetivo
-
-Proveer herramientas rápidas permanentes sin necesidad de expandir el panel lateral.
-
-La toolbar será visible en todos los modos.
-
----
-
-# 20. Ubicación
-
-Parte inferior de la pantalla.
-
-Ancho completo horizontal.
-
----
-
-# 21. Características visuales de la toolbar
-
-La toolbar deberá ser:
-
-- compacta,
-- minimalista,
-- semitransparente,
-- poco intrusiva.
-
----
-
-# 22. Funciones de la toolbar
-
-## 1. Vistas rápidas de cámara
-
-Accesos directos para mover rápidamente la cámara a vistas predefinidas.
-
-Ejemplos:
-
-- vista frontal,
-- zoom sobre display,
-- zoom sobre controles,
-- vista general.
-
----
-
-## 2. Toggle Explicar
-
-Permite activar/desactivar Modo Explicar.
-
-Ejemplo:
-
-```text
-[ Explicar ]
-```
-
----
-
-## 3. Controles rápidos adicionales
-
-Opcionalmente:
-
-- reset cámara,
-- reset osciloscopio,
-- screenshots,
-- overlays,
-- pantalla completa.
-
----
-
-# 23. Integración con cámara
-
-La UI NO modificará directamente la cámara.
-
-Cuando el Panel Workspace cambie de estado:
-
-- hidden,
-- compact,
-- expanded,
-
-la UI notificará el nuevo estado al `CameraController`.
-
-El `CameraController` será responsable de:
-
-- reencuadrar el instrumento,
-- ajustar paneo,
-- modificar zoom,
-- preservar visibilidad,
-- restaurar framing anterior.
-
-Esto mantiene desacoplados:
-
-- sistema de UI,
-- sistema de cámara,
-- lógica de navegación espacial.
-
----
-
-# 24. Flujo general de interacción
-
-## Estado normal esperado
-
-```text
-Explorar Mode
-+
-Launcher compacto
-+
-Barra inferior
-+
-Viewport 3D dominante
-```
-
----
-
-## Usuario toca launcher
-
-```text
-expand workspace
-```
-
----
-
-## Workspace expandido
-
-Usuario puede seleccionar:
-
-- Ejercicios,
-- Manual,
-- Configuración.
-
----
-
-## Usuario vuelve a Explorar
-
-```text
-collapse workspace
-→ return to immersive mode
-```
-
----
-
-# 25. Transiciones
-
-Las transiciones deberán utilizar:
-
-- easing,
-- interpolaciones suaves,
-- animaciones temporizadas.
-
-No deberán existir cambios abruptos de layout.
-
----
-
-# 26. Responsividad
-
-La arquitectura deberá soportar:
-
-- desktop,
-- pantallas táctiles,
-- tablets.
-
----
-
-# 27. Objetivo final de experiencia
-
-La aplicación deberá sentirse más cercana a:
-
-- un instrumento interactivo,
-- un simulador educativo,
-- una experiencia espacial,
-
-y menos a:
-
-- una aplicación web tradicional,
-- un dashboard,
-- una interfaz basada en paneles permanentes.
-
-# 28. Implementación de la UI con React
-
-## Objetivo
-
-La interfaz HTML superpuesta deberá implementarse utilizando React.
-
-El objetivo principal es facilitar:
-
-- manejo de estados complejos,
-- renderizado condicional,
-- composición modular de UI,
-- reutilización de componentes,
-- mantenimiento futuro,
-- desacople entre lógica visual y lógica de interacción.
-
-La UI deberá estar completamente basada en estados declarativos.
-
----
-
-# Arquitectura general de UI
-
-La interfaz deberá organizarse en componentes reutilizables e independientes.
-
-Ejemplos:
-
-```text
-WorkspacePanel
-BottomToolbar
-ExerciseStep
-ControlExplanation
-ManualSection
-SettingsPage
-```
-
-Cada componente deberá responsabilizarse únicamente de:
-
-- rendering,
-- comportamiento visual,
-- interacción UI,
-- manejo local de estado.
-
----
-
-# Estado global de UI
-
-La aplicación deberá mantener un estado global para controlar:
-
-```text
-workspaceMode
-interactionMode
-panelState
-selectedControl
-activeExercise
-exerciseStep
-toolbarState
-cameraPreset
-```
-
-La UI deberá reaccionar automáticamente a cambios en estos estados.
-
-Ejemplos:
-
-- si `panelState = expanded`, el panel se renderiza expandido,
-- si `workspaceMode = explorar`, el workspace se colapsa,
-- si `interactionMode = explicar`, los controles muestran ayuda contextual.
-
----
-
-# Organización recomendada
-
-Ejemplo conceptual:
-
-```text
-/src
-
-  /ui
-    /components
-    /workspace
-    /toolbar
-    /manual
-    /exercises
-    /settings
-
-  /state
-    AppContext.jsx
-
-  /data
-    controls.json
-    exercises.json
-```
-
----
-
-# Workspace Panel
-
-El Workspace Panel deberá implementarse como un componente desacoplado y controlado completamente por estado.
-
-Ejemplo conceptual:
-
-```text
-panelState:
-- hidden
-- compact
-- expanded
-```
-
-La transición entre estados deberá producir:
-
-- cambios automáticos de layout,
-- aparición/desaparición de contenido,
-- animaciones suaves,
-- renderizado condicional.
-
----
-
-# Navegación entre modos
-
-La navegación principal del workspace deberá renderizar dinámicamente:
-
-```text
-Explorar
+Laboratorio
+Explicar
 Ejercicios
 Manual
 Configuración
 ```
 
-La UI deberá cambiar automáticamente el contenido contextual dependiendo del `workspaceMode` activo.
+Seleccionar una sección expande el panel (si estaba colapsado) y reemplaza el contenido contextual.
+
+Cambiar de sección sale automáticamente del modo Explicar (si estaba activo) y vuelve `interactionMode` a `interact`.
 
 ---
 
-# Modo Explicar
+# 8. Laboratorio Mode
 
-El modo Explicar deberá funcionar como una política global de interacción.
+## Objetivo
 
-Cuando esté activo:
+Permitir al usuario configurar libremente las señales de entrada conectadas a los canales CH1 y CH2 del osciloscopio.
 
-- los controles no ejecutarán acciones reales,
-- la UI mostrará información contextual del control seleccionado,
-- el Workspace Panel podrá expandirse automáticamente.
+## Comportamiento por defecto
 
----
+- Es la sección por defecto al iniciar la aplicación.
+- El panel permanece expandido (no se colapsa automáticamente).
+- El usuario interactúa simultáneamente con los controles 3D del instrumento y con los inputs del panel.
 
-# Ejercicios basados en componentes
+## Contenido del panel cuando no hay ejercicio activo
 
-Los ejercicios NO deberán implementarse como páginas HTML arbitrarias.
+Dos secciones, una por canal:
 
-Se recomienda modelarlos mediante bloques reutilizables configurados por JSON.
+- **Canal 1**
+  - tipo de señal (Senoidal / Cuadrada),
+  - amplitud (V),
+  - frecuencia (Hz),
+  - fase (°),
+  - offset (V),
+  - duty cycle (%) cuando el tipo es Cuadrada.
+- **Canal 2**: misma estructura.
 
-Ejemplo conceptual:
+Cada parámetro se edita mediante un slider con un input numérico asociado. El tipo se selecciona con un par de pills.
 
-```json
-{
-  "type": "numeric_input"
-}
-```
+Cada cambio impacta inmediatamente sobre el `InputSignalManager` y, en el caso de CH1, sobre el `DisplayRenderer`. En esta iteración CH2 se almacena pero **no llega todavía al renderer**.
 
-que internamente renderice:
+## Comportamiento durante un ejercicio activo
+
+Cuando `activeExercise != null`, el panel Laboratorio NO muestra controles editables. En su lugar muestra un mensaje informativo:
 
 ```text
-<NumericInputStep />
+Hay un ejercicio en curso.
+
+Para modificar las señales de entrada,
+debe finalizar o abandonar el ejercicio actual.
+```
+
+Junto a un botón `[ Volver al ejercicio ]` que navega a la sección Ejercicios.
+
+---
+
+# 9. Explicar Mode
+
+## Naturaleza conceptual
+
+Explicar es una **sección principal** del menú (no un toggle de la barra inferior). Cuando el usuario la selecciona, la aplicación entra en modo de inspección educativa.
+
+## Funcionamiento
+
+Mientras Explicar está activo:
+
+- los controles 3D del osciloscopio NO ejecutan acciones reales,
+- los controles 3D funcionan como elementos inspeccionables,
+- al hacer click sobre una perilla o botón se despliega información contextual en el panel: nombre, descripción funcional, rangos o pasos, referencias relacionadas.
+
+El tooltip flotante asociado al hover sobre un control 3D solo se muestra durante Explicar.
+
+## Salida del modo
+
+Al elegir cualquier otra sección del menú, la aplicación restaura `interactionMode = interact` automáticamente. No existe un botón explícito de "desactivar Explicar"; basta con cambiar de sección.
+
+## Diferencia respecto del Laboratorio y el Manual
+
+- **Laboratorio**: el usuario configura el instrumento, los controles ejecutan acciones reales.
+- **Explicar**: el usuario inspecciona el instrumento, los controles no ejecutan acciones, sólo informan.
+- **Manual**: navegación documental general, no asociada a un control específico.
+
+---
+
+# 10. Políticas de interacción
+
+La interacción del usuario con el osciloscopio sigue una política `interactionMode` que se sincroniza automáticamente con la sección activa del menú:
+
+| Sección activa | `interactionMode` |
+|----------------|-------------------|
+| Laboratorio    | `interact`        |
+| Explicar       | `explicar`        |
+| Ejercicios     | `interact`        |
+| Manual         | `interact`        |
+| Configuración  | `interact`        |
+
+### interact
+
+Modo normal. Los controles del osciloscopio responden normalmente (mover knobs, presionar botones, cambiar escalas).
+
+### explicar
+
+Modo inspectivo. Los controles NO ejecutan acciones reales; el sistema captura el click y emite el evento educativo al panel.
+
+### disabled
+
+Modo opcional reservado para bloquear toda la interacción 3D (no se utiliza activamente en esta iteración).
+
+---
+
+# 11. Ejercicios Mode
+
+## Objetivo
+
+Guiar al usuario mediante ejercicios secuenciales que configuran temporalmente las señales del osciloscopio.
+
+## Funcionamiento general
+
+El panel permanecerá expandido durante los ejercicios y funcionará como un wizard paso a paso.
+
+Al iniciar un ejercicio el sistema invoca `ExerciseManager.start(id)`, que:
+
+1. Lee la definición del ejercicio (incluyendo el bloque `ch1` y opcionalmente `ch2`).
+2. Llama a `InputSignalManager.acquireForExercise(...)` capturando un snapshot de los valores del usuario y aplicando los del ejercicio.
+3. Cambia el modo del manager a `exercise`, lo que bloquea ediciones desde el panel Laboratorio.
+
+Durante el ejercicio el Laboratorio queda en modo solo-lectura, mostrando el mensaje informativo descrito anteriormente.
+
+## Persistencia entre secciones
+
+El ejercicio NO se cancela automáticamente cuando el usuario cambia de sección. Es válido y esperado:
+
+```text
+Ejercicios → Manual → Configuración → volver a Ejercicios
+```
+
+con el ejercicio permaneciendo exactamente en el mismo paso. Sólo finalizar o abandonar explícitamente termina el ejercicio.
+
+## Finalización / abandono
+
+`ExerciseManager.end()` libera el `InputSignalManager` (`releaseFromExercise()`), restaurando los valores que el usuario había configurado en modo `free`, y luego despacha `END_EXERCISE` al store.
+
+## Layout interno del wizard
+
+- **Header**: nombre del ejercicio, progreso, número de paso.
+- **Área central**: contenido del paso actual (instrucción, teoría, input numérico, multiple choice, control target).
+- **Footer**: navegación (Anterior / Siguiente / Finalizar / Salir).
+
+## Arquitectura de ejercicios
+
+Los ejercicios se definen en JSON. Cada ejercicio incluye:
+
+- `id`, `title`, `subtitle`,
+- `ch1`: objeto `{ type, amplitude, frequency, phase, offset, dutyCycle? }`,
+- `ch2` (opcional): mismo formato,
+- `steps`: lista de bloques (`instruction`, `theory`, `numeric_input`, `multiple_choice`, `control_target`, …).
+
+---
+
+# 12. Manual Mode
+
+Mostrar documentación educativa general del osciloscopio. No depende de la selección de controles 3D.
+
+## Diferencia respecto de Explicar
+
+- **Explicar**: contextual, rápido, asociado a un control específico que el usuario clickea en el 3D.
+- **Manual**: navegación documental, teoría, tutoriales, conceptos generales independientes del control activo.
+
+Contenidos típicos: Trigger, Vertical Scale, Time Base, Sampling, Aliasing, Measurements, Acquisition Modes.
+
+---
+
+# 13. Configuración Mode
+
+Permite configurar parámetros globales de la aplicación:
+
+- idioma,
+- tema visual,
+- calidad gráfica,
+- sensibilidad de drag,
+- escala UI,
+- volumen,
+- restaurar configuración predeterminada.
+
+---
+
+# 14. Barra inferior
+
+## Objetivo
+
+Proveer herramientas rápidas permanentes sin necesidad de expandir el panel lateral. La barra es visible en todos los modos.
+
+## Características visuales
+
+Compacta, minimalista, semitransparente, poco intrusiva.
+
+## Funciones
+
+1. **Vistas rápidas de cámara**: accesos directos a vistas predefinidas (frontal, diagonal, display, general) y reset de cámara.
+2. **Reset osciloscopio**: vuelve `interactionMode` a `interact`.
+3. **Pantalla completa**: toggle de fullscreen del navegador.
+
+> En la primera iteración existía en esta barra un toggle "Explicar". Fue eliminado: el modo Explicar pasó a ser una sección del menú principal.
+
+---
+
+# 15. Integración con cámara
+
+La UI NO modificará directamente la cámara.
+
+Cuando el Panel Workspace cambie de estado (`hidden`, `compact`, `expanded`), la UI notifica el nuevo estado al `CameraController`. El controlador es responsable de reencuadrar el instrumento, ajustar paneo y modificar zoom para preservar la visibilidad.
+
+Esto mantiene desacoplados el sistema de UI, el sistema de cámara y la lógica de navegación espacial.
+
+---
+
+# 16. Flujo general de interacción
+
+## Arranque
+
+```text
+Laboratorio (expandido)
++ Barra inferior
++ Viewport 3D
++ CH1 conectado al DisplayRenderer
+```
+
+## Usuario colapsa con "✕"
+
+```text
+Panel → CompactLauncher ("Menú")
+```
+
+## Usuario hace click en el launcher
+
+```text
+Panel se expande en Laboratorio
+```
+
+## Usuario inicia un ejercicio
+
+```text
+Ejercicios → click sobre ejercicio
+→ ExerciseManager.start(id)
+→ InputSignalManager.acquireForExercise(...)
+→ Laboratorio queda solo-lectura
+```
+
+## Usuario finaliza el ejercicio
+
+```text
+Finalizar / Salir
+→ ExerciseManager.end()
+→ InputSignalManager.releaseFromExercise()
+→ Laboratorio recupera valores previos
 ```
 
 ---
 
-# Renderizado condicional
+# 17. Transiciones
 
-La UI deberá construirse principalmente mediante renderizado condicional basado en estado.
+Las transiciones de panel y de paneles internos deberán utilizar easing, interpolaciones suaves y animaciones temporizadas. No deberán existir cambios abruptos de layout.
 
-Ejemplos conceptuales:
+---
+
+# 18. Responsividad
+
+La arquitectura deberá soportar desktop, pantallas táctiles y tablets.
+
+---
+
+# 19. Objetivo final de experiencia
+
+La aplicación deberá sentirse más cercana a un instrumento interactivo, un simulador educativo y una experiencia espacial, y menos a una aplicación web tradicional, un dashboard o una interfaz basada en paneles permanentes.
+
+---
+
+# 20. Implementación de la UI con React
+
+## Objetivo
+
+La interfaz HTML superpuesta se implementa en React 19. El objetivo principal es facilitar manejo de estados complejos, renderizado condicional, composición modular y desacople entre lógica visual y lógica de interacción.
+
+## Organización
 
 ```text
-si panel expandido → renderizar WorkspacePanel
+/src
+  /ui
+    /components       (WorkspacePanel, PanelHeader, PanelContent, PanelFooter,
+                       BottomToolbar, CompactLauncher, Tooltip3D)
+    /workspace        (LaboratorioMode, EjerciciosMode, ManualMode, ConfiguracionMode)
+    /explicar         (ControlExplanation)
+    /exercises        (ExerciseWizard, blocks/*)
+    /manual           (ManualSection)
+    /settings         (SettingsPage)
+
+  /state
+    AppContext.jsx    (reducer + refs: sceneRef, signalManagerRef, exerciseManagerRef)
+
+  /signals
+    Signal.js, SineSignal.js, SquareSignal.js, InputSignalManager.js
+
+  /exercises
+    ExerciseManager.js
+
+  /data
+    controls.json, exercises.json, manual.json
 ```
 
-```text
-si Explicar activo → renderizar explicación contextual
-```
+## Estado global
+
+`AppContext` mantiene mediante `useReducer`:
 
 ```text
-si modo ejercicios → renderizar wizard de ejercicio
+workspaceMode    : 'laboratorio' | 'explicar' | 'ejercicios' | 'manual' | 'configuracion'
+panelState       : 'hidden' | 'compact' | 'expanded'
+interactionMode  : 'interact' | 'explicar' | 'disabled'
+selectedControl  : id | null
+activeExercise   : id | null
+exerciseStep     : number
+cameraPreset     : key | null
+```
+
+`SET_WORKSPACE_MODE` sincroniza automáticamente `interactionMode` (`explicar` o `interact`) y mantiene el panel expandido.
+
+Además del estado, el provider expone tres refs:
+
+- `sceneRef` → `SceneManager`
+- `signalManagerRef` → `InputSignalManager`
+- `exerciseManagerRef` → `ExerciseManager`
+
+`signalManagerRef` y `exerciseManagerRef` se instancian una sola vez en `App.jsx`. El `signalManager` se enlaza al `DisplayRenderer` mediante `attachRenderer(scene.getDisplayRenderer())` apenas la escena está lista.
+
+## Renderizado condicional
+
+```text
+si panelState='expanded' → renderizar WorkspacePanel completo
+si panelState='compact'  → renderizar CompactLauncher
+workspaceMode='laboratorio'   → LaboratorioMode
+workspaceMode='explicar'      → ControlExplanation
+workspaceMode='ejercicios'    → EjerciciosMode (lista o ExerciseWizard)
+workspaceMode='manual'        → ManualMode
+workspaceMode='configuracion' → ConfiguracionMode
 ```
 
 ---
 
-# Animaciones y transiciones
+# 21. Objetivo arquitectónico
 
-Las transiciones UI deberán implementarse mediante:
-
-- animaciones CSS,
-- transiciones React,
-- interpolaciones suaves.
-
-Especialmente para:
-
-- slide in/out,
-- expand/collapse,
-- overlays,
-- aparición contextual de contenido.
-
----
-
-# Objetivo arquitectónico
-
-La implementación deberá priorizar:
+La implementación prioriza:
 
 - modularidad,
-- claridad estructural,
-- separación de responsabilidades,
-- crecimiento progresivo del sistema,
+- separación clara entre instrumento, señales, routing de entradas, ejercicios, UI e inspección,
+- ownership explícito sobre quién controla las señales en cada momento (`free` vs `exercise`),
 - reutilización de componentes,
 - mantenimiento simple a largo plazo.

@@ -170,6 +170,22 @@ Responsable de:
 - progresión,
 - respuestas.
 
+Se divide en dos piezas:
+
+- `ExerciseManager` (clase JS instanciada una vez): orquesta `start / next / prev / end`. Al iniciar un ejercicio toma ownership del `InputSignalManager`; al finalizar/abandonar lo libera restaurando la configuración previa del usuario.
+- `ExerciseWizard` (componente React): renderiza el paso actual y delega navegación al `ExerciseManager`.
+
+## Input Signal System
+
+Responsable de:
+
+- estado actual de las señales conectadas a CH1 y CH2,
+- ownership (`free` vs `exercise`) sobre quién puede modificar esas señales,
+- inyección de la señal de CH1 al `DisplayRenderer`,
+- snapshot/restore para devolver el control al usuario al terminar un ejercicio.
+
+Implementado mediante la clase `InputSignalManager`. En modo `free` el panel Laboratorio actualiza los parámetros directamente. En modo `exercise` los setters de usuario son rechazados; solo el `ExerciseManager` puede mutar el estado.
+
 ## Configuration System
 
 Responsable de:
@@ -399,9 +415,7 @@ Responsable de:
 - configuraciones,
 - contenido educativo.
 
-El panel normalmente permanecerá colapsado durante el modo de exploración libre y solo se expandirá cuando exista contenido relevante para mostrar.
-
-Cuando el panel esté colapsado se mostrará únicamente un launcher compacto flotante en la esquina superior derecha.
+El panel arranca expandido por defecto en la sección **Laboratorio**. El usuario puede colapsarlo manualmente mediante el botón "✕" del header, momento en el cual el Workspace se reduce a un launcher compacto flotante en la esquina superior derecha (etiquetado "Menú"). Al hacer click sobre el launcher el panel vuelve a expandirse en Laboratorio.
 
 ---
 
@@ -421,21 +435,42 @@ Ejemplos:
 - vista frontal,
 - zoom sobre display,
 - reset de cámara,
-- activar/desactivar modo Explicar.
+- reset del osciloscopio,
+- pantalla completa.
 
 ---
 
 ## Workspace Modes
 
-La navegación principal del workspace representará modos globales de aplicación.
+La navegación principal del workspace representa cinco modos globales de aplicación mutuamente excluyentes.
 
-### Explorar
+### Laboratorio
 
-Modo libre de interacción con el osciloscopio.
+Modo de configuración libre del instrumento. Es la sección por defecto al iniciar la aplicación. El panel permanece expandido y permite editar los parámetros de las señales conectadas a CH1 y CH2 mediante sliders e inputs numéricos:
 
-Prioriza el viewport 3D y mantiene el panel contextual colapsado.
+- tipo (Senoidal / Cuadrada),
+- amplitud, frecuencia, fase, offset,
+- duty cycle cuando el tipo es Cuadrada.
 
-Cuando el usuario vuelve a este modo desde otro workspace, el panel se colapsa automáticamente.
+Las ediciones impactan directamente sobre el `InputSignalManager`. En esta primera iteración sólo CH1 se conecta al `DisplayRenderer`; CH2 se modela pero no se renderiza.
+
+Cuando hay un ejercicio activo, el panel Laboratorio queda en modo solo-lectura mostrando un mensaje informativo y un botón "Volver al ejercicio".
+
+---
+
+### Explicar
+
+Modo educativo/contextual. Forma parte del menú principal (no es un toggle de la barra inferior).
+
+Mientras Explicar está activo:
+
+- los controles 3D del osciloscopio NO ejecutan acciones reales,
+- al hacer click sobre un control se despliega información contextual en el panel: nombre, descripción funcional, rangos / pasos, referencias relacionadas,
+- los tooltips flotantes sobre los controles se muestran al hacer hover.
+
+La explicación podrá incluir texto, imágenes, ejemplos y links relacionados al manual.
+
+Cualquier otra sección del menú restaura `interactionMode = interact` automáticamente al ser seleccionada.
 
 ---
 
@@ -443,52 +478,21 @@ Cuando el usuario vuelve a este modo desde otro workspace, el panel se colapsa a
 
 Modo guiado mediante consignas y pasos secuenciales.
 
-El panel permanece expandido mostrando:
+El panel permanece expandido mostrando consignas, teoría, pasos, validaciones, respuestas y hints. Cada paso es un bloque (`instruction`, `theory`, `numeric_input`, `multiple_choice`, `control_target`, …).
 
-- consignas,
-- teoría,
-- pasos,
-- validaciones,
-- respuestas,
-- hints.
+El ejercicio persiste al cambiar de sección. Solo finalizar o abandonar explícitamente lo cancela.
 
 ---
 
 ### Manual
 
-Modo de documentación y teoría general del osciloscopio.
-
-Contendrá explicaciones conceptuales y tutoriales.
+Modo de documentación y teoría general del osciloscopio. Contendrá explicaciones conceptuales y tutoriales independientes del control activo.
 
 ---
 
 ### Configuración
 
 Permite configurar parámetros generales de la aplicación.
-
----
-
-## Modo Explicar
-
-El modo Explicar NO forma parte de los Workspace Modes.
-
-Es una herramienta transversal activada desde la barra inferior.
-
-Cuando el modo Explicar está activo:
-
-- los controles del osciloscopio no ejecutan acciones reales,
-- al hacer click sobre un control se despliega información contextual sobre dicho control,
-- el panel contextual se expande automáticamente para mostrar la explicación correspondiente,
-- los tooltips flotantes sobre los controles se muestran al hacer hover.
-
-Cuando el modo Explicar está inactivo, los tooltips flotantes no se renderizan.
-
-La explicación podrá incluir:
-
-- texto,
-- imágenes,
-- ejemplos,
-- links relacionados al manual.
 
 ---
 
@@ -607,6 +611,7 @@ Las validaciones podrán basarse en:
 Se incluirán inicialmente:
 
 - señal senoidal,
+- señal cuadrada.
 
 ---
 
@@ -618,28 +623,31 @@ Ejemplo conceptual:
 {
   "id": "exercise_sinewave",
   "title": "Medición de señal senoidal",
-  "signal": "sine_1khz",
+  "ch1": {
+    "type": "sine",
+    "amplitude": 3,
+    "frequency": 1000,
+    "phase": 0,
+    "offset": 0
+  },
   "steps": [
     {
+      "type": "control_target",
       "instruction": "Medir el período de la señal.",
-      "validation": {
-        "type": "control_state",
-        "expected": {
-          "TIME_DIV": "1ms"
-        }
-      }
+      "targetControl": "TIME_DIV",
+      "targetValue": "1ms"
     },
     {
-      "instruction": "Ingresar frecuencia medida.",
-      "validation": {
-        "type": "numeric_input",
-        "expectedValue": 1000,
-        "tolerance": 50
-      }
+      "type": "numeric_input",
+      "question": "Ingresar frecuencia medida.",
+      "expectedValue": 1000,
+      "tolerance": 50
     }
   ]
 }
 ```
+
+El campo `ch1` (y opcionalmente `ch2`) define el estado completo de las señales que el `ExerciseManager` aplicará vía `InputSignalManager.acquireForExercise(...)` al iniciar el ejercicio. Tipos soportados en esta iteración: `"sine"` y `"square"`.
 
 ---
 

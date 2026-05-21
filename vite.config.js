@@ -2,10 +2,21 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: '.',
+  base: './',
   plugins: [react()],
+  server: {
+    host: true,
+    hmr: { overlay: true },
+    watch: {
+      usePolling: true,
+      interval: 200,
+    },
+  },
   build: {
+    sourcemap: mode === 'development',
+    minify: mode === 'development' ? false : 'esbuild',
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -14,4 +25,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

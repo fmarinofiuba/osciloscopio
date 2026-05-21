@@ -1,7 +1,8 @@
 import { useAppState } from '../../state/AppContext.jsx'
 
 const MODES = [
-  { key: 'explorar',       label: 'Explorar',      icon: '◎' },
+  { key: 'laboratorio',    label: 'Lab',           icon: '◎' },
+  { key: 'explicar',       label: 'Explicar',      icon: '💡' },
   { key: 'ejercicios',     label: 'Ejercicios',    icon: '✦' },
   { key: 'manual',         label: 'Manual',        icon: '📖' },
   { key: 'configuracion',  label: 'Config',        icon: '⚙' },
@@ -29,7 +30,7 @@ export default function PanelHeader() {
               key={key}
               onClick={() => selectMode(key)}
               className={`
-                flex items-center gap-1 px-3 py-2 rounded-t-lg text-xs font-medium
+                flex items-center gap-1 px-2.5 py-2 rounded-t-lg text-[11px] font-medium
                 transition-all duration-150 whitespace-nowrap
                 ${isActive
                   ? 'text-text-primary bg-white/8 border-b-2 border-accent'

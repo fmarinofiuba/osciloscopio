@@ -1,4 +1,5 @@
 import { useAppState } from '../../state/AppContext.jsx'
+import LaboratorioMode from '../workspace/LaboratorioMode.jsx'
 import EjerciciosMode from '../workspace/EjerciciosMode.jsx'
 import ManualMode from '../workspace/ManualMode.jsx'
 import ConfiguracionMode from '../workspace/ConfiguracionMode.jsx'
@@ -7,16 +8,19 @@ import ControlExplanation from '../explicar/ControlExplanation.jsx'
 export default function PanelContent() {
   const { state } = useAppState()
 
-  // Explicar mode overrides content when a control is focused (or no control yet)
-  if (state.interactionMode === 'explicar') {
-    return (
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <ControlExplanation />
-      </div>
-    )
-  }
-
   switch (state.workspaceMode) {
+    case 'laboratorio':
+      return (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <LaboratorioMode />
+        </div>
+      )
+    case 'explicar':
+      return (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ControlExplanation />
+        </div>
+      )
     case 'ejercicios':
       return (
         <div className="flex-1 min-h-0 overflow-hidden">

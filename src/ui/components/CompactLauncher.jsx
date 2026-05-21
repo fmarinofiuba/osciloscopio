@@ -4,7 +4,7 @@ export default function CompactLauncher() {
   const { dispatch } = useAppState()
 
   function expand() {
-    dispatch({ type: 'SET_WORKSPACE_MODE', payload: 'ejercicios' })
+    dispatch({ type: 'SET_WORKSPACE_MODE', payload: 'laboratorio' })
   }
 
   return (
@@ -22,7 +22,7 @@ export default function CompactLauncher() {
         "
       >
         <span className="text-accent text-base">◎</span>
-        <span>Workspace</span>
+        <span>Menú</span>
         <span className="text-text-muted text-xs">▸</span>
       </button>
     </div>

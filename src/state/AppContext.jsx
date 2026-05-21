@@ -1,9 +1,9 @@
 import { createContext, useContext, useReducer, useRef } from 'react'
 
 const initialState = {
-  workspaceMode:   'explorar',   // 'explorar' | 'ejercicios' | 'manual' | 'configuracion'
-  panelState:      'compact',    // 'hidden' | 'compact' | 'expanded'
-  interactionMode: 'interact',   // 'interact' | 'explicar' | 'disabled'
+  workspaceMode:   'laboratorio',  // 'laboratorio' | 'explicar' | 'ejercicios' | 'manual' | 'configuracion'
+  panelState:      'expanded',     // 'hidden' | 'compact' | 'expanded'
+  interactionMode: 'interact',     // 'interact' | 'explicar' | 'disabled'
   selectedControl: null,
   activeExercise:  null,
   exerciseStep:    0,
@@ -15,10 +15,15 @@ function reducer(state, action) {
 
     case 'SET_WORKSPACE_MODE': {
       const mode = action.payload
-      if (mode === 'explorar') {
-        return { ...state, workspaceMode: mode, panelState: 'compact', activeExercise: null, exerciseStep: 0 }
+      const interactionMode = mode === 'explicar' ? 'explicar' : 'interact'
+      const selectedControl = mode === 'explicar' ? null : state.selectedControl
+      return {
+        ...state,
+        workspaceMode: mode,
+        panelState: 'expanded',
+        interactionMode,
+        selectedControl,
       }
-      return { ...state, workspaceMode: mode, panelState: 'expanded' }
     }
 
     case 'SET_PANEL_STATE':
@@ -28,16 +33,7 @@ function reducer(state, action) {
       return { ...state, panelState: 'expanded' }
 
     case 'COLLAPSE_PANEL':
-      return { ...state, panelState: 'compact', workspaceMode: 'explorar' }
-
-    case 'TOGGLE_EXPLICAR': {
-      const next = state.interactionMode === 'explicar' ? 'interact' : 'explicar'
-      return {
-        ...state,
-        interactionMode: next,
-        selectedControl: next === 'interact' ? null : state.selectedControl,
-      }
-    }
+      return { ...state, panelState: 'compact' }
 
     case 'SET_INTERACTION_MODE':
       return { ...state, interactionMode: action.payload }
@@ -46,13 +42,12 @@ function reducer(state, action) {
       const nextState = { ...state, selectedControl: action.payload }
       if (state.interactionMode === 'explicar' && action.payload) {
         nextState.panelState = 'expanded'
-        nextState.workspaceMode = 'explorar'
       }
       return nextState
     }
 
     case 'START_EXERCISE':
-      return { ...state, activeExercise: action.payload, exerciseStep: 0, workspaceMode: 'ejercicios', panelState: 'expanded' }
+      return { ...state, activeExercise: action.payload, exerciseStep: 0, workspaceMode: 'ejercicios', panelState: 'expanded', interactionMode: 'interact' }
 
     case 'SET_EXERCISE_STEP':
       return { ...state, exerciseStep: action.payload }
@@ -79,9 +74,11 @@ const AppContext = createContext(null)
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState)
   const sceneRef = useRef(null)
+  const signalManagerRef = useRef(null)
+  const exerciseManagerRef = useRef(null)
 
   return (
-    <AppContext.Provider value={{ state, dispatch, sceneRef }}>
+    <AppContext.Provider value={{ state, dispatch, sceneRef, signalManagerRef, exerciseManagerRef }}>
       {children}
     </AppContext.Provider>
   )

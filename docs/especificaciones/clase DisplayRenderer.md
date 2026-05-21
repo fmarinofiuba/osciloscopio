@@ -41,7 +41,9 @@ El offset vertical deberá desplazar toda la waveform hacia arriba o hacia abajo
 
 La waveform deberá representarse como una línea continua obtenida a partir de muestras temporales de la señal. La implementación concreta del algoritmo de dibujo queda abierta, pero visualmente deberá verse como una curva continua limpia y estable.
 
-La señal utilizada en esta primera versión podrá ser una representación idealizada y libre de ruido. Por ejemplo, una señal senoidal perfectamente estable o una señal cuadrada ideal. El `DisplayRenderer` no deberá depender del mecanismo que genera la señal, sino únicamente recibir una representación abstracta de la misma, por ejemplo una lista de muestras o valores temporales.
+La señal utilizada en esta primera versión podrá ser una representación idealizada y libre de ruido. Por ejemplo, una señal senoidal perfectamente estable o una señal cuadrada ideal. El `DisplayRenderer` no deberá depender del mecanismo que genera la señal, sino únicamente recibir una representación abstracta de la misma a través de la interfaz `sample(t)`.
+
+En la integración actual el `DisplayRenderer` recibe su señal de CH1 desde el `InputSignalManager` mediante el método `attachRenderer(displayRenderer)`. El manager mantiene viva la instancia de `Signal` y muta sus parámetros directamente cuando el usuario cambia amplitud, frecuencia, fase u offset; sólo reemplaza la referencia almacenada en el renderer cuando cambia el **tipo** de señal (Senoidal ↔ Cuadrada). El renderer no conoce ni la fuente ni el modo de ownership (`free` vs `exercise`) que gobierna esa señal. En esta iteración CH2 se modela en el `InputSignalManager` pero NO se conecta al renderer.
 
 El sistema de trigger deberá implementarse de forma simplificada. No se buscará reproducir el comportamiento físico real del circuito de trigger del osciloscopio, sino únicamente generar una representación visual equivalente desde el punto de vista del usuario.
 

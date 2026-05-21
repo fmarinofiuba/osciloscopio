@@ -11,16 +11,10 @@ export default function ControlExplanation() {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-3">
         <span className="text-3xl opacity-30">💡</span>
-        <p className="text-text-muted text-sm font-medium">Modo Explicar activo</p>
+        <p className="text-text-muted text-sm font-medium">Modo Explicar</p>
         <p className="text-text-muted/60 text-xs leading-relaxed">
           Hacé click sobre cualquier control del osciloscopio para ver su descripción y funcionamiento.
         </p>
-        <button
-          onClick={() => dispatch({ type: 'TOGGLE_EXPLICAR' })}
-          className="mt-2 text-xs text-text-muted hover:text-red-400 transition-colors"
-        >
-          Desactivar modo Explicar
-        </button>
       </div>
     )
   }
