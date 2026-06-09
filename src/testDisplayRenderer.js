@@ -47,7 +47,7 @@ let ch2VIdx = VOLTS_STEPS.indexOf(1);
 let timIdx  = TIME_STEPS.findIndex(v => v >= 5e-4);
 const posTrack = { ch1: 0, ch2: 0, _prevCh1: 0, _prevCh2: 0 };
 
-const renderer = new DisplayRenderer({ width: 640, height: 512 });
+const renderer = new DisplayRenderer({ width: 640, height: 480 });
 renderer.signal1       = buildSignal(ch1Signal);
 renderer.ch1VoltsPerDiv = VOLTS_STEPS[ch1VIdx];
 renderer.ch2VoltsPerDiv = VOLTS_STEPS[ch2VIdx];
@@ -281,7 +281,7 @@ fBevel.addButton({ title: 'F5 (inferior)' }).on('click', () => renderer.pressBev
 // ── Apariencia ─────────────────────────────────────────────────────────────────
 
 const fApp = pane.addFolder({ title: 'Apariencia', expanded: false });
-const appParams = { showSubdivisions: true, lineWidth: 1.8, width: 640, height: 512 };
+const appParams = { showSubdivisions: true, lineWidth: 1.8, width: 640, height: 480 };
 
 fApp.addBinding(appParams, 'showSubdivisions', { label: 'Subdivisiones' })
   .on('change', () => { renderer.showSubdivisions = appParams.showSubdivisions; });
