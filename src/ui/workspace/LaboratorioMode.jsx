@@ -4,6 +4,7 @@ import { useAppState } from '../../state/AppContext.jsx'
 const SIGNAL_TYPES = [
   { key: 'sine',   label: 'Senoidal' },
   { key: 'square', label: 'Cuadrada' },
+  { key: 'rc',     label: 'RC' },
 ]
 
 const PARAM_RANGES = {
@@ -12,6 +13,7 @@ const PARAM_RANGES = {
   phaseDeg:  { min: -180, max: 180,   step: 1,     unit: '°'  },
   offset:    { min: -5,   max: 5,     step: 0.1,   unit: 'V'  },
   dutyCycle: { min: 1,    max: 99,    step: 1,     unit: '%'  },
+  tau_us:    { min: 0.01, max: 10000, step: 0.01,  unit: 'µs' },
 }
 
 function radToDeg(r) { return r * 180 / Math.PI }
@@ -56,30 +58,50 @@ function ParamSlider({ label, value, onChange, range, disabled }) {
   )
 }
 
-function ChannelSection({ name, params, onChange, disabled }) {
+function ChannelSection({ name, params, onChange, disabled, active, onToggle, canToggle }) {
   const type = params.type ?? 'sine'
+  const isDisabled = disabled || !active
 
   return (
-    <div className="rounded-lg border border-panel-border bg-white/3 p-3 space-y-3">
+    <div className={`rounded-lg border bg-white/3 p-3 space-y-3 transition-colors ${
+      active ? 'border-panel-border' : 'border-panel-border/40 opacity-60'
+    }`}>
       <div className="flex items-center justify-between">
         <h3 className="text-text-primary text-xs font-semibold uppercase tracking-wider">{name}</h3>
-        <div className="flex gap-1">
-          {SIGNAL_TYPES.map(({ key, label }) => (
+        <div className="flex items-center gap-2">
+          {canToggle && (
             <button
-              key={key}
-              onClick={() => onChange({ type: key })}
+              onClick={onToggle}
               disabled={disabled}
               className={`
-                text-[10px] px-2 py-0.5 rounded border transition-colors
-                ${type === key
-                  ? 'bg-accent/15 text-accent border-accent/40'
+                text-[10px] px-2 py-0.5 rounded border font-semibold transition-colors
+                ${active
+                  ? 'bg-green-500/15 text-green-400 border-green-500/40 hover:bg-green-500/25'
                   : 'bg-white/3 text-text-muted border-panel-border hover:bg-white/8'}
                 disabled:opacity-40
               `}
             >
-              {label}
+              {active ? 'ON' : 'OFF'}
             </button>
-          ))}
+          )}
+          <div className="flex gap-1">
+            {SIGNAL_TYPES.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => onChange({ type: key })}
+                disabled={isDisabled}
+                className={`
+                  text-[10px] px-2 py-0.5 rounded border transition-colors
+                  ${type === key
+                    ? 'bg-accent/15 text-accent border-accent/40'
+                    : 'bg-white/3 text-text-muted border-panel-border hover:bg-white/8'}
+                  disabled:opacity-40
+                `}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -88,28 +110,30 @@ function ChannelSection({ name, params, onChange, disabled }) {
         value={params.amplitude}
         onChange={(v) => onChange({ amplitude: v })}
         range={PARAM_RANGES.amplitude}
-        disabled={disabled}
+        disabled={isDisabled}
       />
       <ParamSlider
         label="Frecuencia"
         value={params.frequency}
         onChange={(v) => onChange({ frequency: v })}
         range={PARAM_RANGES.frequency}
-        disabled={disabled}
+        disabled={isDisabled}
       />
+      {type !== 'rc' && (
+        <ParamSlider
+          label="Fase"
+          value={radToDeg(params.phase ?? 0)}
+          onChange={(deg) => onChange({ phase: degToRad(deg) })}
+          range={PARAM_RANGES.phaseDeg}
+          disabled={isDisabled}
+        />
+      )}
       <ParamSlider
-        label="Fase"
-        value={radToDeg(params.phase ?? 0)}
-        onChange={(deg) => onChange({ phase: degToRad(deg) })}
-        range={PARAM_RANGES.phaseDeg}
-        disabled={disabled}
-      />
-      <ParamSlider
-        label="Offset"
+        label="Offset DC"
         value={params.offset}
         onChange={(v) => onChange({ offset: v })}
         range={PARAM_RANGES.offset}
-        disabled={disabled}
+        disabled={isDisabled}
       />
       {type === 'square' && (
         <ParamSlider
@@ -117,11 +141,33 @@ function ChannelSection({ name, params, onChange, disabled }) {
           value={(params.dutyCycle ?? 0.5) * 100}
           onChange={(pct) => onChange({ dutyCycle: pct / 100 })}
           range={PARAM_RANGES.dutyCycle}
-          disabled={disabled}
+          disabled={isDisabled}
         />
+      )}
+      {type === 'rc' && (
+        <>
+          <ParamSlider
+            label="Duty cycle"
+            value={(params.dutyCycle ?? 0.5) * 100}
+            onChange={(pct) => onChange({ dutyCycle: pct / 100 })}
+            range={PARAM_RANGES.dutyCycle}
+            disabled={isDisabled}
+          />
+          <ParamSlider
+            label="τ = RC"
+            value={(params.tau ?? 2e-4) * 1e6}
+            onChange={(us) => onChange({ tau: us * 1e-6 })}
+            range={PARAM_RANGES.tau_us}
+            disabled={isDisabled}
+          />
+        </>
       )}
     </div>
   )
+}
+
+function serializeParams(p) {
+  return `${p.type}|${p.amplitude}|${p.frequency}|${p.phase}|${p.offset}|${p.dutyCycle}|${p.tau}`
 }
 
 function useSignalManager() {
@@ -131,9 +177,11 @@ function useSignalManager() {
   const subscribe = useCallback((cb) => {
     return manager ? manager.subscribe(cb) : () => {}
   }, [manager])
-  const getSnapshot = useCallback(() => manager?.mode ?? 'free', [manager])
+  const getSnapshot = useCallback(() => {
+    if (!manager) return 'init'
+    return `${manager.mode}|${manager.ch1Visible}|${manager.ch2Visible}|${serializeParams(manager.ch1)}|${serializeParams(manager.ch2)}`
+  }, [manager])
 
-  // Trigger re-render on any manager change
   useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   return manager
 }
@@ -188,16 +236,19 @@ export default function LaboratorioMode() {
         <ChannelSection
           name="Canal 1"
           params={manager.ch1}
+          active={manager.ch1Visible}
+          canToggle={true}
+          onToggle={() => manager.setCh1Visible(!manager.ch1Visible)}
           onChange={(partial) => manager.setCh1Params(partial)}
         />
         <ChannelSection
           name="Canal 2"
           params={manager.ch2}
+          active={manager.ch2Visible}
+          canToggle={true}
+          onToggle={() => manager.setCh2Visible(!manager.ch2Visible)}
           onChange={(partial) => manager.setCh2Params(partial)}
         />
-        <p className="text-[10px] text-text-muted/60 italic px-1">
-          Nota: Canal 2 se configura aquí pero todavía no se muestra en pantalla.
-        </p>
       </div>
     </div>
   )

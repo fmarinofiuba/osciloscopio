@@ -158,6 +158,8 @@ export class SceneManager {
         onHover: (x, y, ctrl) => this._callbacks.onHover?.(x, y, ctrl),
         onHoverEnd: () => this._callbacks.onHoverEnd?.(),
         onControlClick: (ctrl) => this._callbacks.onControlClick?.(ctrl),
+        onKnobChanged: (ctrl, value) => this._callbacks.onKnobChanged?.(ctrl, value),
+        onButtonChanged: (ctrl, state) => this._callbacks.onButtonChanged?.(ctrl, state),
       });
     } catch (err) {
       console.error("Error loading model:", err);
@@ -177,7 +179,7 @@ export class SceneManager {
       return;
     }
 
-    this._displayRenderer = new DisplayRenderer({ width: 512, height: 256 });
+    this._displayRenderer = new DisplayRenderer({ width: 640, height: 512 });
     this._displayRenderer.triggerLevel = 0;
     this._displayRenderer.voltsPerDiv = 1;
     this._displayRenderer.timePerDiv = 1e-3;
@@ -186,6 +188,8 @@ export class SceneManager {
     texture.flipY = false;
     texture.repeat.set(-1, 1);
     texture.offset.set(1, 0);
+    texture.minFilter = THREE.NearestFilter;
+    texture.magFilter = THREE.NearestFilter;
 
     screenMesh.material = new THREE.MeshBasicMaterial({ map: texture });
     this._displayTexture = texture;
@@ -268,6 +272,8 @@ export class SceneManager {
         onHover: (x, y, ctrl) => this._callbacks.onHover?.(x, y, ctrl),
         onHoverEnd: () => this._callbacks.onHoverEnd?.(),
         onControlClick: (ctrl) => this._callbacks.onControlClick?.(ctrl),
+        onKnobChanged: (ctrl, value) => this._callbacks.onKnobChanged?.(ctrl, value),
+        onButtonChanged: (ctrl, state) => this._callbacks.onButtonChanged?.(ctrl, state),
       });
     }
   }

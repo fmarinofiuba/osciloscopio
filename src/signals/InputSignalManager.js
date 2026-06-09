@@ -1,13 +1,17 @@
 import { SineSignal } from './SineSignal.js'
 import { SquareSignal } from './SquareSignal.js'
+import { RCSignal } from './RCSignal.js'
 
 const DEFAULT_CH1 = { type: 'sine', amplitude: 3, frequency: 1000, phase: 0, offset: 0 }
 const DEFAULT_CH2 = { type: 'sine', amplitude: 1, frequency: 500,  phase: 0, offset: 0 }
 
 function createSignal(params) {
-  const { type, amplitude, frequency, phase, offset, dutyCycle } = params
+  const { type, amplitude, frequency, phase, offset, dutyCycle, tau } = params
   if (type === 'square') {
     return new SquareSignal({ amplitude, frequency, phase, offset, dutyCycle: dutyCycle ?? 0.5 })
+  }
+  if (type === 'rc') {
+    return new RCSignal({ amplitude, frequency, offset, dutyCycle: dutyCycle ?? 0.5, tau: tau ?? 2e-4 })
   }
   return new SineSignal({ amplitude, frequency, phase, offset })
 }
@@ -20,6 +24,7 @@ function snapshotChannel(channel) {
     phase: channel.params.phase,
     offset: channel.params.offset,
     dutyCycle: channel.params.dutyCycle,
+    tau: channel.params.tau,
   }
 }
 
@@ -29,8 +34,8 @@ export class InputSignalManager {
     this._renderer = null
     this._listeners = new Set()
 
-    this._ch1 = { params: { ...ch1 }, signal: createSignal(ch1) }
-    this._ch2 = { params: { ...ch2 }, signal: createSignal(ch2) }
+    this._ch1 = { params: { ...ch1 }, signal: createSignal(ch1), visible: true }
+    this._ch2 = { params: { ...ch2 }, signal: createSignal(ch2), visible: false }
 
     this._userSnapshot = null
   }
@@ -40,13 +45,17 @@ export class InputSignalManager {
   get mode() { return this._mode }
   get ch1() { return { ...this._ch1.params } }
   get ch2() { return { ...this._ch2.params } }
+  get ch1Visible() { return this._ch1.visible }
+  get ch2Visible() { return this._ch2.visible }
 
   // ── Renderer wiring ──────────────────────────────────────────────────────
 
   attachRenderer(renderer) {
     this._renderer = renderer
     if (renderer) {
-      renderer.signal = this._ch1.signal
+      renderer.signal1 = this._ch1.signal
+      renderer.signal2 = this._ch2.visible ? this._ch2.signal : null
+      renderer.setChannelVisible(2, this._ch2.visible)
     }
   }
 
@@ -77,6 +86,24 @@ export class InputSignalManager {
     return true
   }
 
+  setCh1Visible(visible) {
+    this._ch1.visible = visible
+    if (this._renderer) {
+      this._renderer.signal1 = visible ? this._ch1.signal : null
+      this._renderer.setChannelVisible(1, visible)
+    }
+    this._emit()
+  }
+
+  setCh2Visible(visible) {
+    this._ch2.visible = visible
+    if (this._renderer) {
+      this._renderer.signal2 = visible ? this._ch2.signal : null
+      this._renderer.setChannelVisible(2, visible)
+    }
+    this._emit()
+  }
+
   _applyParams(channel, partial, isCh1) {
     const prevType = channel.params.type
     const nextParams = { ...channel.params, ...partial }
@@ -84,8 +111,9 @@ export class InputSignalManager {
 
     if (nextParams.type !== prevType) {
       channel.signal = createSignal(nextParams)
-      if (isCh1 && this._renderer) {
-        this._renderer.signal = channel.signal
+      if (this._renderer) {
+        if (isCh1) this._renderer.signal1 = channel.signal
+        else if (channel.visible) this._renderer.signal2 = channel.signal
       }
       return
     }
@@ -99,8 +127,11 @@ export class InputSignalManager {
     if (typeof nextParams.dutyCycle === 'number' && 'dutyCycle' in sig) {
       sig.dutyCycle = nextParams.dutyCycle
     }
+    if (typeof nextParams.tau === 'number' && 'tau' in sig) {
+      sig.tau = nextParams.tau
+    }
 
-    if (isCh1 && this._renderer) {
+    if (this._renderer) {
       this._renderer.invalidateDynamic?.()
     }
   }
@@ -133,8 +164,9 @@ export class InputSignalManager {
   _forceApply(channel, params, isCh1) {
     channel.params = { ...channel.params, ...params }
     channel.signal = createSignal(channel.params)
-    if (isCh1 && this._renderer) {
-      this._renderer.signal = channel.signal
+    if (this._renderer) {
+      if (isCh1) this._renderer.signal1 = channel.signal
+      else if (channel.visible) this._renderer.signal2 = channel.signal
     }
   }
 }
