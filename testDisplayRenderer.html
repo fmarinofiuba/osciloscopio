@@ -9,19 +9,19 @@
   <body>
     <div class="tester-container">
       <main class="tester-layout">
-        <!-- Panel de Canvas -->
+        <!-- Panel izquierdo: parámetros de señales -->
+        <aside class="control-panel glass-card">
+          <div id="tweakpane-signals"></div>
+        </aside>
+
+        <!-- Panel central: Canvas -->
         <section class="display-panel glass-card">
           <div class="display-bezel">
             <div id="canvas-host"></div>
           </div>
-          <div class="display-info">
-            <p>
-              El canvas de arriba se actualiza en tiempo real. La renderización está dividida en una capa estática (grilla y subdivisiones) y una capa dinámica (trazado de la señal y sincronización de disparo/trigger).
-            </p>
-          </div>
         </section>
 
-        <!-- Panel de Controles (Tweakpane) -->
+        <!-- Panel derecho: controles del osciloscopio -->
         <aside class="control-panel glass-card">
           <div id="tweakpane-host"></div>
         </aside>

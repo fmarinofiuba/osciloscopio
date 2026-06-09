@@ -28,7 +28,10 @@
       "Bash(curl -s http://localhost:5174/src/App.jsx -o NUL -w \"HTTP %{http_code}\\\\n\")",
       "Bash(curl -s http://localhost:5174/src/signals/InputSignalManager.js -o NUL -w \"HTTP %{http_code}\\\\n\")",
       "Bash(curl -s http://localhost:5174/src/ui/workspace/LaboratorioMode.jsx -o NUL -w \"HTTP %{http_code}\\\\n\")",
-      "Bash(curl -s http://localhost:5174/src/exercises/ExerciseManager.js -o NUL -w \"HTTP %{http_code}\\\\n\")"
+      "Bash(curl -s http://localhost:5174/src/exercises/ExerciseManager.js -o NUL -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(node --experimental-vm-modules -e ' *)",
+      "Bash(npx --yes acorn --ecma2022 --module src/display/OscilloscopeState.js)",
+      "Bash(npx acorn *)"
     ]
   }
 }

@@ -261,13 +261,19 @@ h2 {
 
 .tester-layout {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 300px 1fr 300px;
   gap: 24px;
   align-items: center;
   flex-grow: 1;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+  .tester-layout {
+    grid-template-columns: 260px 1fr 260px;
+  }
+}
+
+@media (max-width: 900px) {
   .tester-layout {
     grid-template-columns: 1fr;
   }
