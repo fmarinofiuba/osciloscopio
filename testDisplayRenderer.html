@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Banco de Pruebas: DisplayRenderer</title>
+    <link rel="stylesheet" href="/styles/test-display.css" />
+  </head>
+  <body>
+    <div class="tester-container">
+      <main class="tester-layout">
+        <!-- Panel de Canvas -->
+        <section class="display-panel glass-card">
+          <div class="display-bezel">
+            <div id="canvas-host"></div>
+          </div>
+          <div class="display-info">
+            <p>
+              El canvas de arriba se actualiza en tiempo real. La renderización está dividida en una capa estática (grilla y subdivisiones) y una capa dinámica (trazado de la señal y sincronización de disparo/trigger).
+            </p>
+          </div>
+        </section>
+
+        <!-- Panel de Controles (Tweakpane) -->
+        <aside class="control-panel glass-card">
+          <div id="tweakpane-host"></div>
+        </aside>
+      </main>
+    </div>
+
+    <!-- Script de configuración -->
+    <script type="module" src="/src/testDisplayRenderer.js"></script>
+  </body>
+</html>

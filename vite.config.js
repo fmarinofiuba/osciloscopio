@@ -19,7 +19,9 @@ export default defineConfig(({ mode }) => ({
     minify: mode === 'development' ? false : 'esbuild',
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
+        index: resolve(__dirname, 'index.html'),
+        main: resolve(__dirname, 'main.html'),
+        testDisplayRenderer: resolve(__dirname, 'testDisplayRenderer.html'),
         displayRendererTester: resolve(__dirname, 'tests/display-renderer/index.html'),
         cameraControllerTester: resolve(__dirname, 'tests/camera-controller/index.html'),
       },

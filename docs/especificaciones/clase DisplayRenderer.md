@@ -84,3 +84,19 @@ El tester deberá permitir validar visualmente que:
 - el display se mantiene visualmente consistente ante cambios de resolución
 
 El objetivo del tester será permitir iterar rápidamente sobre el comportamiento visual del display antes de integrarlo con el resto del sistema del osciloscopio virtual.
+
+---
+
+## Panel lateral de menú (MenuLayer)
+
+El display incorpora un panel lateral de menú fiel a la estética del Tektronix TDS 1002. El panel ocupa el margen derecho del canvas y se compone de:
+
+- **Título** del menú activo (ej. "CH1") en la parte superior, con tipografía bold de 14 px y separador horizontal inferior.
+- **5 slots de igual altura** que cubren el resto del panel. Cada slot muestra:
+  - Una etiqueta descriptiva de 1 o 2 líneas (11 px), centrada horizontalmente.
+  - Una caja negra con el valor activo en texto blanco bold (13 px). La caja se ajusta en ancho al contenido del texto más un padding horizontal fijo; **no cubre todo el ancho del panel**.
+- **Separadores finos** entre slots con opacidad reducida.
+- **Borde inferior sólido** dibujado al final del último slot.
+- **Sin línea vertical** separando el panel del área de grilla; la separación visual queda implícita por el contexto.
+
+Los textos del área de grilla (etiqueta de canal, escala vertical y escala horizontal) se renderizan a 16 px para mayor legibilidad, alineados al borde inferior del canvas.

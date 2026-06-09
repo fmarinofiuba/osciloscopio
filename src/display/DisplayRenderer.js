@@ -1,8 +1,86 @@
 import { DivisionCoordinates } from './DivisionCoordinates.js';
 import { StaticLayer } from './layers/StaticLayer.js';
 import { DynamicLayer } from './layers/DynamicLayer.js';
+import { MenuLayer } from './layers/MenuLayer.js';
 
 const MARGINS = { top: 24, bottom: 28, left: 28, right: 36 };
+const MENU_PANEL_WIDTH = 120;
+
+// ─── Definición de los cuatro menús del osciloscopio ──────────────────────────
+
+const MENU_DEFINITIONS = {
+  ch1: {
+    title: 'CH1',
+    items: [
+      { key: 'coupling',   label: 'Acoplamiento', type: 'radio',  options: ['CC', 'CA', 'GND'] },
+      { key: 'bwLimit',    label: 'Limitar\nAncho Banda', type: 'radio',  options: ['NO', 'SI'] },
+      { key: 'voltsGain',  label: 'Voltios/Div',  type: 'radio',  options: ['Gruesa', 'Fina'] },
+      { key: 'probe',      label: 'Sonda',         type: 'cycle',  options: ['1X', '10X', '100X', '1000X'] },
+      { key: 'invert',     label: 'Invertir',      type: 'radio',  options: ['NO', 'SI'] },
+    ],
+    defaultState: {
+      coupling: 'CC',
+      bwLimit:  'NO',
+      voltsGain: 'Gruesa',
+      probe:    '1X',
+      invert:   'NO',
+    },
+  },
+
+  ch2: {
+    title: 'CH2',
+    items: [
+      { key: 'coupling',   label: 'Acoplamiento', type: 'radio',  options: ['CC', 'CA', 'GND'] },
+      { key: 'bwLimit',    label: 'Limitar\nAncho Banda', type: 'radio',  options: ['NO', 'SI'] },
+      { key: 'voltsGain',  label: 'Voltios/Div',  type: 'radio',  options: ['Gruesa', 'Fina'] },
+      { key: 'probe',      label: 'Sonda',         type: 'cycle',  options: ['1X', '10X', '100X', '1000X'] },
+      { key: 'invert',     label: 'Invertir',      type: 'radio',  options: ['NO', 'SI'] },
+    ],
+    defaultState: {
+      coupling: 'CC',
+      bwLimit:  'NO',
+      voltsGain: 'Gruesa',
+      probe:    '1X',
+      invert:   'NO',
+    },
+  },
+
+  trigger: {
+    title: 'Menú Disparo',
+    items: [
+      { key: 'type',      label: 'Tipo',        type: 'page',  labelA: 'Flanco', labelB: 'Vídeo' },
+      { key: 'slope',     label: 'Pendiente',   type: 'radio', options: ['Subida', 'Bajada'] },
+      { key: 'source',    label: 'Fuente',      type: 'cycle', options: ['CH1', 'CH2', 'Ext', 'Ext/5', 'Red'] },
+      { key: 'mode',      label: 'Modo',        type: 'radio', options: ['Auto', 'Normal', 'Único'] },
+      { key: 'coupling',  label: 'Acoplamiento',type: 'cycle', options: ['CC', 'CA', 'Rec. Ruido', 'Rec. AF', 'Rec. BF'] },
+    ],
+    defaultState: {
+      type:     'A',
+      slope:    'Subida',
+      source:   'CH1',
+      mode:     'Auto',
+      coupling: 'CC',
+    },
+  },
+
+  cursors: {
+    title: 'Cursores',
+    items: [
+      { key: 'type',    label: 'Tipo',    type: 'cycle', options: ['Sin', 'Voltaje', 'Tiempo'] },
+      { key: 'source',  label: 'Fuente',  type: 'cycle', options: ['CH1', 'CH2'] },
+      { key: 'delta',   label: 'Delta',   type: 'action' },
+      { key: 'cursor1', label: 'Cursor 1', type: 'action' },
+      { key: 'cursor2', label: 'Cursor 2', type: 'action' },
+    ],
+    defaultState: {
+      type:    'Sin',
+      source:  'CH1',
+      delta:   null,
+      cursor1: null,
+      cursor2: null,
+    },
+  },
+};
 
 export class DisplayRenderer {
   constructor({ width = 640, height = 512, divisionsX = 10, divisionsY = 8 } = {}) {
@@ -24,13 +102,25 @@ export class DisplayRenderer {
     this._driftOffset = 0;
     this._lastDriftTime = null;
 
+    // ── Estado de menús ─────────────────────────────────────────────────────
+    this._activeMenu = null;       // clave del menú activo ('ch1'|'ch2'|'trigger'|'cursors'|null)
+    this._menuState = {
+      ch1:     { ...MENU_DEFINITIONS.ch1.defaultState },
+      ch2:     { ...MENU_DEFINITIONS.ch2.defaultState },
+      trigger: { ...MENU_DEFINITIONS.trigger.defaultState },
+      cursors: { ...MENU_DEFINITIONS.cursors.defaultState },
+    };
+    this._menuDirty = true;
+
     this.canvas = document.createElement('canvas');
     this._staticCanvas = document.createElement('canvas');
     this._dynamicCanvas = document.createElement('canvas');
+    this._menuCanvas = document.createElement('canvas');
     this._ctx = this.canvas.getContext('2d');
 
     this._staticLayer = new StaticLayer(this._staticCanvas);
     this._dynamicLayer = new DynamicLayer(this._dynamicCanvas);
+    this._menuLayer = new MenuLayer(this._menuCanvas);
 
     this._staticDirty = true;
     this._dynamicDirty = true;
@@ -46,6 +136,8 @@ export class DisplayRenderer {
     this._staticCanvas.height = this._height;
     this._dynamicCanvas.width = this._width;
     this._dynamicCanvas.height = this._height;
+    this._menuCanvas.width = this._width;
+    this._menuCanvas.height = this._height;
     this._coords = new DivisionCoordinates({
       width: this._width,
       height: this._height,
@@ -54,7 +146,7 @@ export class DisplayRenderer {
       marginTop: MARGINS.top,
       marginBottom: MARGINS.bottom,
       marginLeft: MARGINS.left,
-      marginRight: MARGINS.right,
+      marginRight: MARGINS.right + MENU_PANEL_WIDTH,
     });
   }
 
@@ -68,7 +160,8 @@ export class DisplayRenderer {
 
   invalidateStatic() { this._staticDirty = true; this._compositeDirty = true; }
   invalidateDynamic() { this._dynamicDirty = true; this._compositeDirty = true; }
-  invalidateAll() { this._staticDirty = true; this._dynamicDirty = true; this._compositeDirty = true; }
+  invalidateMenu() { this._menuDirty = true; this._compositeDirty = true; }
+  invalidateAll() { this._staticDirty = true; this._dynamicDirty = true; this._menuDirty = true; this._compositeDirty = true; }
 
   get voltsPerDiv() { return this._voltsPerDiv; }
   set voltsPerDiv(v) { if (v !== this._voltsPerDiv) { this._voltsPerDiv = v; this.invalidateStatic(); this.invalidateDynamic(); } }
@@ -99,6 +192,70 @@ export class DisplayRenderer {
 
   get width() { return this._width; }
   get height() { return this._height; }
+  get menuPanelWidth() { return MENU_PANEL_WIDTH; }
+  get menuPanelX() { return this._width - MENU_PANEL_WIDTH; }
+  get activeMenu() { return this._activeMenu; }
+
+  // ── API pública de menús ───────────────────────────────────────────────────
+
+  /**
+   * Abre el menú indicado. Si ya está abierto, lo cierra (toggle).
+   * @param {'ch1'|'ch2'|'trigger'|'cursors'} menuName
+   */
+  openMenu(menuName) {
+    if (this._activeMenu === menuName) {
+      this._activeMenu = null;
+    } else {
+      this._activeMenu = menuName;
+    }
+    this.invalidateMenu();
+  }
+
+  /** Cierra el menú activo. */
+  closeMenu() {
+    if (this._activeMenu !== null) {
+      this._activeMenu = null;
+      this.invalidateMenu();
+    }
+  }
+
+  /**
+   * Simula la pulsación del botón biselado n (0-4) del panel lateral.
+   * En listas circulares avanza al siguiente valor.
+   * En radio selecciona la siguiente opción.
+   * En page alterna entre sub-página A y B.
+   * En action no hace nada (por ahora).
+   * @param {number} n  Índice del botón (0 = primero arriba, 4 = último abajo)
+   */
+  pressBevelButton(n) {
+    if (!this._activeMenu) return;
+    const def = MENU_DEFINITIONS[this._activeMenu];
+    if (!def || n < 0 || n >= def.items.length) return;
+
+    const item = def.items[n];
+    const state = this._menuState[this._activeMenu];
+    const current = state[item.key];
+
+    if (item.type === 'cycle' || item.type === 'radio') {
+      const opts = item.options;
+      const idx = opts.indexOf(current);
+      state[item.key] = opts[(idx + 1) % opts.length];
+    } else if (item.type === 'page') {
+      state[item.key] = current === 'A' ? 'B' : 'A';
+    }
+    // 'action' no altera estado por ahora
+
+    this.invalidateMenu();
+  }
+
+  /**
+   * Devuelve el estado actual de un menú dado.
+   * @param {'ch1'|'ch2'|'trigger'|'cursors'} menuName
+   * @returns {object}
+   */
+  getMenuState(menuName) {
+    return { ...this._menuState[menuName] };
+  }
 
   _isTriggered() {
     if (!this._signal) return false;
@@ -151,11 +308,14 @@ export class DisplayRenderer {
         voltsPerDiv: this._voltsPerDiv,
         timePerDiv: this._timePerDiv,
         showSubdivisions: this._showSubdivisions,
+        menuPanelWidth: MENU_PANEL_WIDTH,
       });
       this._staticDirty = false;
     }
 
     if (this._dynamicDirty) {
+      const triggered = this._isTriggered();
+      const triggerStatus = triggered ? 'triggered' : (this._signal ? 'auto' : 'armed');
       this._dynamicLayer.draw({
         coords: this._coords,
         signal: this._signal,
@@ -164,16 +324,33 @@ export class DisplayRenderer {
         verticalOffset: this._verticalOffset,
         horizontalOffset: this._horizontalOffset + this._driftOffset,
         triggerLevel: this._triggerLevel,
-        triggered: this._isTriggered(),
+        triggerStatus,
+        triggerMenuState: this._menuState.trigger,
         lineWidth: this._lineWidth,
       });
       this._dynamicDirty = false;
+    }
+
+    if (this._menuDirty) {
+      const def = this._activeMenu ? MENU_DEFINITIONS[this._activeMenu] : null;
+      const state = this._activeMenu ? this._menuState[this._activeMenu] : null;
+      this._menuLayer.draw({
+        width: this._width,
+        height: this._height,
+        panelX: this._width - MENU_PANEL_WIDTH,
+        panelWidth: MENU_PANEL_WIDTH,
+        activeMenu: this._activeMenu,
+        menuDef: def,
+        menuState: state,
+      });
+      this._menuDirty = false;
     }
 
     if (this._compositeDirty) {
       this._ctx.clearRect(0, 0, this._width, this._height);
       this._ctx.drawImage(this._staticCanvas, 0, 0);
       this._ctx.drawImage(this._dynamicCanvas, 0, 0);
+      this._ctx.drawImage(this._menuCanvas, 0, 0);
       this._compositeDirty = false;
     }
   }

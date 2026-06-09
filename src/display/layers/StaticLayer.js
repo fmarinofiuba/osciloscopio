@@ -6,7 +6,7 @@ export class StaticLayer {
     this.ctx = canvas.getContext('2d');
   }
 
-  draw({ coords, voltsPerDiv, timePerDiv, showSubdivisions }) {
+  draw({ coords, voltsPerDiv, timePerDiv, showSubdivisions, menuPanelWidth = 0 }) {
     const ctx = this.ctx;
     const { width, height, gridLeft, gridTop, gridWidth, gridHeight, divisionsX, divisionsY, pxPerDivX, pxPerDivY, centerX, centerY } = coords;
 
@@ -17,52 +17,60 @@ export class StaticLayer {
     ctx.fillStyle = '#000000';
 
     if (showSubdivisions) {
-      const subX = pxPerDivX / SUBDIVISIONS_PER_DIV;
-      const subY = pxPerDivY / SUBDIVISIONS_PER_DIV;
-      const dotSize = 1;
-      for (let i = 0; i <= divisionsX * SUBDIVISIONS_PER_DIV; i++) {
-        const x = gridLeft + i * subX;
-        for (let j = 0; j <= divisionsY * SUBDIVISIONS_PER_DIV; j++) {
-          const y = gridTop + j * subY;
-          ctx.fillRect(x - dotSize / 2, y - dotSize / 2, dotSize, dotSize);
-        }
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+
+      // Dashed horizontal division lines (skip center axis and borders)
+      ctx.setLineDash([2, 4]);
+      ctx.beginPath();
+      for (let j = 1; j < divisionsY; j++) {
+        if (j === divisionsY / 2) continue; // skip center axis
+        const y = gridTop + j * pxPerDivY + 0.5;
+        ctx.moveTo(gridLeft, y);
+        ctx.lineTo(gridLeft + gridWidth, y);
       }
-    }
-
-    const majorDotSize = 2;
-    for (let i = 0; i <= divisionsX; i++) {
-      const x = gridLeft + i * pxPerDivX;
-      for (let j = 0; j <= divisionsY; j++) {
-        const y = gridTop + j * pxPerDivY;
-        ctx.fillRect(x - majorDotSize / 2, y - majorDotSize / 2, majorDotSize, majorDotSize);
+      // Dashed vertical division lines (skip center axis and borders)
+      for (let i = 1; i < divisionsX; i++) {
+        if (i === divisionsX / 2) continue; // skip center axis
+        const x = gridLeft + i * pxPerDivX + 0.5;
+        ctx.moveTo(x, gridTop);
+        ctx.lineTo(x, gridTop + gridHeight);
       }
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
-
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 1;
-
-    ctx.setLineDash([2, 3]);
-    ctx.beginPath();
-    ctx.moveTo(gridLeft, centerY + 0.5);
-    ctx.lineTo(gridLeft + gridWidth, centerY + 0.5);
-    ctx.moveTo(centerX + 0.5, gridTop);
-    ctx.lineTo(centerX + 0.5, gridTop + gridHeight);
-    ctx.stroke();
-    ctx.setLineDash([]);
 
     const tickLen = 3;
     ctx.beginPath();
     const subX = pxPerDivX / SUBDIVISIONS_PER_DIV;
+    const subY = pxPerDivY / SUBDIVISIONS_PER_DIV;
+
+    // Ticks horizontales: eje central + bordes superior e inferior
     for (let i = 0; i <= divisionsX * SUBDIVISIONS_PER_DIV; i++) {
       const x = gridLeft + i * subX;
+      // eje central
       ctx.moveTo(x + 0.5, centerY - tickLen);
       ctx.lineTo(x + 0.5, centerY + tickLen);
+      // borde superior
+      ctx.moveTo(x + 0.5, gridTop);
+      ctx.lineTo(x + 0.5, gridTop + tickLen);
+      // borde inferior
+      ctx.moveTo(x + 0.5, gridTop + gridHeight);
+      ctx.lineTo(x + 0.5, gridTop + gridHeight - tickLen);
     }
-    const subY = pxPerDivY / SUBDIVISIONS_PER_DIV;
+
+    // Ticks verticales: eje central + bordes izquierdo y derecho
     for (let j = 0; j <= divisionsY * SUBDIVISIONS_PER_DIV; j++) {
       const y = gridTop + j * subY;
+      // eje central
       ctx.moveTo(centerX - tickLen, y + 0.5);
       ctx.lineTo(centerX + tickLen, y + 0.5);
+      // borde izquierdo
+      ctx.moveTo(gridLeft, y + 0.5);
+      ctx.lineTo(gridLeft + tickLen, y + 0.5);
+      // borde derecho
+      ctx.moveTo(gridLeft + gridWidth, y + 0.5);
+      ctx.lineTo(gridLeft + gridWidth - tickLen, y + 0.5);
     }
     ctx.stroke();
 
@@ -71,7 +79,7 @@ export class StaticLayer {
     ctx.strokeRect(gridLeft + 0.5, gridTop + 0.5, gridWidth, gridHeight);
 
     ctx.fillStyle = '#000000';
-    ctx.font = '11px ui-monospace, "Courier New", monospace';
+    ctx.font = '16px ui-monospace, "Courier New", monospace';
     ctx.textBaseline = 'bottom';
     ctx.textAlign = 'left';
     const labelY = height - 6;

@@ -3,10 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Osciloscopio Virtual</title>
+    <meta name="description" content="Portal de aplicaciones y herramientas de laboratorio para el proyecto de Osciloscopio Virtual." />
+    <title>Laboratorio de Osciloscopio — Portal de Aplicaciones</title>
+    <link rel="stylesheet" href="/styles/test-display.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div class="index-container">
+      <header class="index-header">
+        <h1 class="text-gradient">Laboratorio de Osciloscopio</h1>
+        <p>Explora la aplicación principal y las herramientas de pruebas del sistema.</p>
+      </header>
+
+      <main class="apps-grid">
+        <!-- Tarjeta: Osciloscopio Virtual (Principal) -->
+        <article class="app-card glass-card">
+          <span class="app-badge">Aplicación Principal</span>
+          <h2 class="text-gradient">Osciloscopio Virtual</h2>
+          <p>
+            Simulador de osciloscopio interactivo en 3D. Controla perillas de voltaje y base de tiempo en tiempo real sobre un modelo interactivo tridimensional, con soporte para señales predefinidas y personalizadas.
+          </p>
+          <a href="main.html" class="app-btn app-btn-primary" id="btn-launch-main">
+            Lanzar Aplicación
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </article>
+
+        <!-- Tarjeta: Banco de Pruebas (DisplayRenderer) -->
+        <article class="app-card glass-card">
+          <span class="app-badge tester">Banco de Pruebas</span>
+          <h2 class="text-gradient">DisplayRenderer Tester</h2>
+          <p>
+            Entorno de pruebas aislado para validar la lógica del renderizador 2D. Manipula escalas de división, sincronización por trigger, desfases y amplitudes de señales a través de un panel interactivo Tweakpane.
+          </p>
+          <a href="testDisplayRenderer.html" class="app-btn app-btn-secondary" id="btn-launch-tester">
+            Lanzar Testbench
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </article>
+      </main>
+
+      <footer class="index-footer">
+        <p>© 2026 Laboratorio de Osciloscopio Virtual. Todos los derechos reservados.</p>
+      </footer>
+    </div>
   </body>
 </html>
