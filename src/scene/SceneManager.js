@@ -133,7 +133,7 @@ export class SceneManager {
 
     // Load GLTF model
     try {
-      const model = await ModelLoader.load("models/osciloscopio v4.glb");
+      const model = await ModelLoader.load("models/osciloscopio_v4.glb");
       model.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
