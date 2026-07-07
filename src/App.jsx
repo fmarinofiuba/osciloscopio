@@ -4,6 +4,7 @@ import { useThreeScene } from './scene/useThreeScene.js'
 import WorkspacePanel from './ui/components/WorkspacePanel.jsx'
 import BottomToolbar from './ui/components/BottomToolbar.jsx'
 import Tooltip3D from './ui/components/Tooltip3D.jsx'
+import WelcomePopup from './ui/components/WelcomePopup.jsx'
 import ChannelPopup from './ui/workspace/ChannelPopup.jsx'
 import { InputSignalManager } from './signals/InputSignalManager.js'
 import { ExerciseManager } from './exercises/ExerciseManager.js'
@@ -101,9 +102,9 @@ function AppInner() {
             dispatch({ type: 'EXPAND_PANEL' })
           }
         },
-        onProbeConnectorClick: (channel) => {
+        onProbeConnectorClick: (channel, anchor) => {
           setTooltip(TOOLTIP_HIDDEN)
-          setChannelPopup(channel)
+          setChannelPopup({ channel, anchor })
         },
 
         onKnobChanged: (ctrl, rawValue) => {
@@ -220,7 +221,12 @@ function AppInner() {
       {/* Floating tooltip: shows knob live value during drag (any mode) and
           informational tooltips while the Explicar section is active. */}
       <Tooltip3D tooltip={tooltip} />
-      <ChannelPopup channel={channelPopup} onClose={() => setChannelPopup(null)} />
+      <WelcomePopup />
+      <ChannelPopup
+        channel={channelPopup?.channel}
+        anchor={channelPopup?.anchor}
+        onClose={() => setChannelPopup(null)}
+      />
     </div>
   )
 }

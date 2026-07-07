@@ -304,7 +304,9 @@ export class InteractionSystem {
     if (!hit) return
 
     if (hit.ctrl.type === 'probeConnector') {
-      this._callbacks.onProbeConnectorClick?.(hit.ctrl.channel)
+      const outlineObject = hit.ctrl.outlineObject ?? hit.mesh
+      const pos = this._meshScreenPos(outlineObject)
+      this._callbacks.onProbeConnectorClick?.(hit.ctrl.channel, pos)
       return
     }
 

@@ -9,7 +9,7 @@ export default function ManualSection({ section, onBack }) {
           ← Índice
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xl">{section.icon}</span>
+          <span className="text-xl text-text-primary">{section.icon}</span>
           <h2 className="text-text-primary text-sm font-semibold">{section.title}</h2>
         </div>
         <p className="text-text-muted text-xs mt-1">{section.summary}</p>

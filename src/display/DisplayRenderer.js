@@ -57,7 +57,7 @@ const MENU_DEFINITIONS = {
   cursors: {
     title: 'Cursores',
     items: [
-      { key: 'type',    label: 'Tipo',     type: 'cycle',  options: ['Sin', 'Voltaje', 'Tiempo'] },
+      { key: 'type',    label: 'Tipo',     type: 'cycle',  options: ['Sin', 'Tensión', 'Tiempo'] },
       { key: 'source',  label: 'Fuente',   type: 'cycle',  options: ['CH1', 'CH2'] },
       { key: 'delta',   label: 'Delta',    type: 'action' },
       { key: 'cursor1', label: 'Cursor 1', type: 'action' },
@@ -425,7 +425,7 @@ export class DisplayRenderer {
     const srcCh = cursors.source === 'CH2' ? ch[2] : ch[1];
     const { cursor1Pos, cursor2Pos } = cursors;
 
-    if (cursors.type === 'Voltaje') {
+    if (cursors.type === 'Tensión') {
       const v1 = (cursor1Pos - srcCh.verticalPosition) * srcCh.voltsPerDiv;
       const v2 = (cursor2Pos - srcCh.verticalPosition) * srcCh.voltsPerDiv;
       return {

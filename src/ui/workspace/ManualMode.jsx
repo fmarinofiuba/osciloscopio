@@ -29,7 +29,7 @@ export default function ManualMode() {
               flex items-center gap-3 group
             "
           >
-            <span className="text-xl group-hover:scale-110 transition-transform">
+            <span className="w-8 flex-shrink-0 text-center text-xl text-text-primary group-hover:scale-110 transition-transform">
               {section.icon}
             </span>
             <div className="flex-1 min-w-0">

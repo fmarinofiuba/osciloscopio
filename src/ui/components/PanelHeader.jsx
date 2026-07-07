@@ -4,7 +4,7 @@ const MODES = [
   { key: 'ejercicios', label: 'Ejercicios', icon: '*' },
   { key: 'explicar', label: 'Explicar', icon: '?' },
   { key: 'manual', label: 'Manual', icon: 'M' },
-  { key: 'configuracion', label: 'Config', icon: 'C' },
+  { key: 'configuracion', label: 'Config', icon: 'C', hidden: true },
 ]
 
 export default function PanelHeader() {
@@ -21,7 +21,7 @@ export default function PanelHeader() {
   return (
     <div className="flex-shrink-0 border-b border-panel-border">
       <div className="flex items-center px-2 pt-2">
-        {MODES.map(({ key, label, icon }) => {
+        {MODES.filter((mode) => !mode.hidden).map(({ key, label, icon }) => {
           const isActive = state.workspaceMode === key
           return (
             <button

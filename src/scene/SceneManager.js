@@ -111,6 +111,7 @@ export class SceneManager {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     this._composer = new EffectComposer(this.renderer);
+    this._setComposerMultisampling(4);
     this._composer.addPass(new RenderPass(this.scene, this.camera));
 
     this._outlinePass = new OutlinePass(
@@ -137,6 +138,7 @@ export class SceneManager {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
+          this._configureMaterialTextureSampling(child.material);
         }
       });
       this.scene.add(model);
@@ -165,7 +167,7 @@ export class SceneManager {
         onHover: (x, y, ctrl) => this._callbacks.onHover?.(x, y, ctrl),
         onHoverEnd: () => this._callbacks.onHoverEnd?.(),
         onControlClick: (ctrl) => this._callbacks.onControlClick?.(ctrl),
-        onProbeConnectorClick: (channel) => this._callbacks.onProbeConnectorClick?.(channel),
+        onProbeConnectorClick: (channel, anchor) => this._callbacks.onProbeConnectorClick?.(channel, anchor),
         onKnobChanged: (ctrl, value) => this._callbacks.onKnobChanged?.(ctrl, value),
         onButtonChanged: (ctrl, state) => this._callbacks.onButtonChanged?.(ctrl, state),
       });
@@ -198,11 +200,62 @@ export class SceneManager {
     texture.flipY = false;
     texture.repeat.set(-1, 1);
     texture.offset.set(1, 0);
-    texture.minFilter = THREE.LinearMipmapLinearFilter;
-    texture.magFilter = THREE.LinearMipmapLinearFilter;
+    this._configureTextureSampling(texture);
 
     screenMesh.material = new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff });
     this._displayTexture = texture;
+  }
+
+  _setComposerMultisampling(samples) {
+    if (!this.renderer?.capabilities.isWebGL2 || !this._composer) return;
+    const targetSamples = Math.min(samples, 8);
+    for (const target of [this._composer.renderTarget1, this._composer.renderTarget2]) {
+      if (target && "samples" in target) {
+        target.samples = targetSamples;
+      }
+    }
+  }
+
+  _configureMaterialTextureSampling(material) {
+    if (!material) return;
+    const materials = Array.isArray(material) ? material : [material];
+    const maxAnisotropy = this.renderer?.capabilities.getMaxAnisotropy?.() ?? 1;
+    const textureSlots = [
+      "map",
+      "emissiveMap",
+      "aoMap",
+      "lightMap",
+      "bumpMap",
+      "normalMap",
+      "roughnessMap",
+      "metalnessMap",
+      "alphaMap",
+    ];
+
+    for (const mat of materials) {
+      for (const slot of textureSlots) {
+        const texture = mat?.[slot];
+        if (!texture?.isTexture) continue;
+        this._configureTextureSampling(texture, maxAnisotropy);
+      }
+    }
+  }
+
+  _configureTextureSampling(texture, anisotropy = null) {
+    const canUseMipmaps = this._textureSupportsMipmaps(texture);
+    texture.generateMipmaps = canUseMipmaps;
+    texture.minFilter = canUseMipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = anisotropy ?? this.renderer?.capabilities.getMaxAnisotropy?.() ?? 1;
+    texture.needsUpdate = true;
+  }
+
+  _textureSupportsMipmaps(texture) {
+    if (this.renderer?.capabilities.isWebGL2) return true;
+    const image = texture?.image;
+    const width = image?.width;
+    const height = image?.height;
+    return THREE.MathUtils.isPowerOfTwo(width) && THREE.MathUtils.isPowerOfTwo(height);
   }
 
   _onResize() {
@@ -298,7 +351,7 @@ export class SceneManager {
         onHover: (x, y, ctrl) => this._callbacks.onHover?.(x, y, ctrl),
         onHoverEnd: () => this._callbacks.onHoverEnd?.(),
         onControlClick: (ctrl) => this._callbacks.onControlClick?.(ctrl),
-        onProbeConnectorClick: (channel) => this._callbacks.onProbeConnectorClick?.(channel),
+        onProbeConnectorClick: (channel, anchor) => this._callbacks.onProbeConnectorClick?.(channel, anchor),
         onKnobChanged: (ctrl, value) => this._callbacks.onKnobChanged?.(ctrl, value),
         onButtonChanged: (ctrl, state) => this._callbacks.onButtonChanged?.(ctrl, state),
       });

@@ -94,23 +94,23 @@ El `DisplayRenderer` es la "caja negra" del osciloscopio virtual. Todo estado ob
 
 | Variable | Tipo | Valores | Default |
 |---|---|---|---|
-| `cursors.type` | string | `'Sin'` / `'Voltaje'` / `'Tiempo'` | `'Sin'` |
+| `cursors.type` | string | `'Sin'` / `'Tensión'` / `'Tiempo'` | `'Sin'` |
 | `cursors.source` | string | `'CH1'` / `'CH2'` | `'CH1'` |
 | `cursors.cursor1Pos` | number | posición en divisiones desde el centro | `-1` |
 | `cursors.cursor2Pos` | number | posición en divisiones desde el centro | `+1` |
 
 **Semántica:**
 - `'Sin'` → los cursores no se dibujan.
-- `'Voltaje'` → dos líneas horizontales. Posición en divisiones verticales desde el centro de la grilla.
+- `'Tensión'` → dos líneas horizontales. Posición en divisiones verticales desde el centro de la grilla.
 - `'Tiempo'` → dos líneas verticales. Posición en divisiones horizontales desde el centro de la grilla.
 
 Los cursores se mueven con las **perillas POSITION de CH1 y CH2** cuando el menú de cursores está activo (ver §4.2).
 
 **Referencias de medición de los cursores** (conforme al manual):
-- **Cursores de Voltaje:** el valor mostrado es la posición del cursor respecto a **tierra (GND)** del canal fuente, no respecto al centro de la pantalla. Se calcula como: `cursorPos × voltsPerDiv - ch[source].verticalPosition × voltsPerDiv`.
+- **Cursores de Tensión:** el valor mostrado es la posición del cursor respecto a **tierra (GND)** del canal fuente, no respecto al centro de la pantalla. Se calcula como: `cursorPos × voltsPerDiv - ch[source].verticalPosition × voltsPerDiv`.
 - **Cursores de Tiempo:** el valor mostrado es el tiempo respecto al **punto de trigger**, no al centro físico de la pantalla. Se calcula como: `cursorPos × timePerDiv - horizontalPosition`.
 
-> **Corrección respecto a versión anterior:** La versión anterior indicaba que los cursores se miden "desde el centro de la pantalla". Esto es incorrecto: voltaje se mide desde GND del canal, tiempo se mide desde el trigger.
+> **Corrección respecto a versión anterior:** La versión anterior indicaba que los cursores se miden "desde el centro de la pantalla". Esto es incorrecto: tensión se mide desde GND del canal, tiempo se mide desde el trigger.
 
 ### 1.6 Estado del trigger status (calculado)
 
@@ -285,7 +285,7 @@ Cada opción del menú tiene efecto visual **inmediato** al cambiarse:
   - Perilla POSITION CH2 → mueve `cursors.cursor2Pos`.
 - Al cerrar el menú de cursores, los cursores permanecen visibles pero ya no son movibles por las perillas (las perillas vuelven a mover las waveforms).
 
-**Cursores de Voltaje** (`cursors.type = 'Voltaje'`):
+**Cursores de Tensión** (`cursors.type = 'Tensión'`):
 - Se dibujan dos líneas horizontales que cruzan todo el ancho de la grilla.
 - `cursor1Pos` y `cursor2Pos` en divisiones verticales desde el centro de la grilla.
 - Readout en el menú lateral (valores respecto a **GND del canal fuente**):

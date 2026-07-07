@@ -15,7 +15,7 @@ los menues a implementar son
 aqui se detalla como se acciona o se enciende cada menu
 
 Menú de Cursores: Se llega a él mediante el botón CURSORES
-. Permite activar líneas de medición para Voltaje o Tiempo
+. Permite activar líneas de medición para Tensión o Tiempo
 Menú de Disparo: Se activa con el botón MENÚ DISPARO
 . Permite alternar entre los tipos de disparo por Flanco o por Vídeo y configurar sus parámetros específicos como fuente y acoplamiento
 Menú de Canal (ch1/ch2): Se llega presionando los botones individuales de cada canal: CH 1 MENU, CH 2 MENU, etc.
@@ -35,7 +35,7 @@ Aqui va el detalle de cada menu y que hace cada opcion
 
 Menú de Cursores (Botón CURSORES)
 Permite realizar mediciones manuales en pantalla 
-●	Tipo: Voltaje (líneas horizontales), Tiempo (líneas verticales) o Sin (desactivado) 
+●	Tipo: Tensión (líneas horizontales), Tiempo (líneas verticales) o Sin (desactivado) 
 ●	Fuente: Selecciona la señal a medir (CH1, CH2, Matem., etc.) 
 ●	Delta: Muestra la diferencia entre ambos cursores 
 ●	Cursor 1 / Cursor 2: Muestran la posición individual de cada cursor respecto a tierra o al disparo .

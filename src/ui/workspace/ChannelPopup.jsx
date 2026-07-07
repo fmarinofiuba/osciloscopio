@@ -6,7 +6,46 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)
 }
 
-export default function ChannelPopup({ channel, onClose }) {
+const POPUP_WIDTH = 320
+const POPUP_GAP = 72
+const VIEWPORT_MARGIN = 8
+const MENU_GAP = 24
+
+function getInitialPosition(anchor) {
+  const width = Math.min(window.innerWidth * 0.25, POPUP_WIDTH)
+  const height = Math.min(window.innerHeight * 0.78, 520)
+  const menuLeft = window.innerWidth * 0.65
+  const rightLimit = Math.min(window.innerWidth - VIEWPORT_MARGIN, menuLeft - MENU_GAP)
+  const freeAreaWidth = rightLimit - VIEWPORT_MARGIN
+
+  if (!anchor || freeAreaWidth <= width) {
+    return {
+      left: Math.max(VIEWPORT_MARGIN, (freeAreaWidth - width) / 2),
+      top: Math.max(VIEWPORT_MARGIN, (window.innerHeight - height) / 2),
+    }
+  }
+
+  const leftCandidate = anchor.x - width - POPUP_GAP
+  const rightCandidate = anchor.x + POPUP_GAP
+  const fitsLeft = leftCandidate >= VIEWPORT_MARGIN
+  const fitsRight = rightCandidate + width <= rightLimit
+  let left
+
+  if (fitsLeft) {
+    left = leftCandidate
+  } else if (fitsRight) {
+    left = rightCandidate
+  } else {
+    left = anchor.x < freeAreaWidth / 2 ? rightCandidate : leftCandidate
+  }
+
+  return {
+    left: clamp(left, VIEWPORT_MARGIN, rightLimit - width),
+    top: clamp(anchor.y - height / 2, VIEWPORT_MARGIN, window.innerHeight - height - VIEWPORT_MARGIN),
+  }
+}
+
+export default function ChannelPopup({ channel, anchor, onClose }) {
   const { state, dispatch } = useAppState()
   const manager = useSignalManager()
   const popupRef = useRef(null)
@@ -15,8 +54,8 @@ export default function ChannelPopup({ channel, onClose }) {
 
   useEffect(() => {
     if (!channel) return
-    setPosition(null)
-  }, [channel])
+    setPosition(getInitialPosition(anchor))
+  }, [channel, anchor])
 
   if (!channel || !manager) return null
 

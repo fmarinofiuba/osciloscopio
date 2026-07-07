@@ -62,7 +62,7 @@
       "control": "cursor",
       "tooltip": {
         "title": "Cursor",
-        "description": "Activa cursores de medición manual para realizar mediciones de tiempo o voltaje."
+        "description": "Activa cursores de medición manual para realizar mediciones de tiempo o tensión."
       }
     },
     {
@@ -228,7 +228,7 @@
       "defaultValue": 0,
       "tooltip": {
         "title": "Trigger Level",
-        "description": "Define el nivel de voltaje que la señal debe cruzar para disparar la adquisición."
+        "description": "Define el nivel de tensión que la señal debe cruzar para disparar la adquisición."
       }
     },
 

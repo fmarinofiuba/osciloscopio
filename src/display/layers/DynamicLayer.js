@@ -152,7 +152,7 @@ export class DynamicLayer {
     ctx.lineWidth   = 1;
     ctx.setLineDash([4, 4]);
 
-    if (cursors.type === 'Voltaje') {
+    if (cursors.type === 'Tensión') {
       for (const pos of [cursors.cursor1Pos, cursors.cursor2Pos]) {
         const py = centerY - pos * pxPerDivY;
         if (py < gridTop || py > gridTop + gridHeight) continue;

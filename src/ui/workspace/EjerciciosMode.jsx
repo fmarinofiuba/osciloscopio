@@ -34,7 +34,7 @@ export default function EjerciciosMode() {
             "
           >
             <div className="flex items-start gap-3">
-              <span className="text-2xl mt-0.5 group-hover:scale-110 transition-transform">
+              <span className="w-8 flex-shrink-0 text-center text-2xl mt-0.5 text-text-primary group-hover:scale-110 transition-transform">
                 {SIGNAL_ICONS[ex.ch1?.type] ?? '📊'}
               </span>
               <div className="flex-1 min-w-0">
