@@ -12,7 +12,7 @@ export class ControlsState {
         if (ctrl.stepValues) {
           this._state.set(ctrl.control, { step: ctrl.defaultIndex ?? 0 })
         } else {
-          this._state.set(ctrl.control, { value: ctrl.defaultValue ?? 0 })
+          this._state.set(ctrl.control, { step: this._valueToStep(ctrl, ctrl.defaultValue ?? 0) })
         }
       } else if (ctrl.type === 'button') {
         this._state.set(ctrl.control, { pressed: false })
@@ -22,6 +22,15 @@ export class ControlsState {
 
   getConfig(id) {
     return this._configs.get(id)
+  }
+
+  _valueToStep(cfg, value) {
+    const maxStep = Math.max(0, (cfg.stepCount ?? 2) - 1)
+    const min = cfg.minValue ?? 0
+    const max = cfg.maxValue ?? 1
+    if (maxStep === 0 || max === min) return 0
+    const norm = (value - min) / (max - min)
+    return Math.max(0, Math.min(maxStep, Math.round(norm * maxStep)))
   }
 
   // ── Knobs with named step values ──────────────────────────────────────────

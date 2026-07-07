@@ -85,6 +85,7 @@ export class DisplayRenderer {
 
     this._lineWidth = 1.5;
     this._showSubdivisions = true;
+    this._powered = true;
 
     // ── Estado de menús ────────────────────────────────────────────────────
     this._activeMenu = null;
@@ -261,6 +262,13 @@ export class DisplayRenderer {
   get showSubdivisions() { return this._showSubdivisions; }
   set showSubdivisions(v) { if (v !== this._showSubdivisions) { this._showSubdivisions = v; this.invalidateStatic(); } }
 
+  get powered() { return this._powered; }
+  set powered(v) {
+    if (v === this._powered) return;
+    this._powered = v;
+    this.invalidateAll();
+  }
+
   // ── Dimensiones ───────────────────────────────────────────────────────────
 
   get width()        { return this._width; }
@@ -337,6 +345,13 @@ export class DisplayRenderer {
   // ── Render ────────────────────────────────────────────────────────────────
 
   render(now = performance.now() / 1000) {
+    if (!this._powered) {
+      this._ctx.clearRect(0, 0, this._width, this._height);
+      this._ctx.fillStyle = '#FFFFFF';
+      this._ctx.fillRect(0, 0, this._width, this._height);
+      this._compositeDirty = false;
+      return;
+    }
     // 1. Sincronizar menuState → OscilloscopeState
     this._state.syncFromMenuState(this._menuState);
 

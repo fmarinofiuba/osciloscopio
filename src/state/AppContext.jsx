@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useRef } from 'react'
 
 const initialState = {
-  workspaceMode:   'laboratorio',  // 'laboratorio' | 'explicar' | 'ejercicios' | 'manual' | 'configuracion'
+  workspaceMode:   'ejercicios',   // 'explicar' | 'ejercicios' | 'manual' | 'configuracion'
   panelState:      'expanded',     // 'hidden' | 'compact' | 'expanded'
   interactionMode: 'interact',     // 'interact' | 'explicar' | 'disabled'
   selectedControl: null,

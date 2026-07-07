@@ -28,7 +28,15 @@ export class DynamicLayer {
 
     this.#drawFooter(ctx, coords, state, triggerStatus);
 
-    const wfArgs = { coords, driftOffset, lineWidth, accuracyUncertain: state.accuracyUncertain, divisionsX: coords.divisionsX, timePerDiv: state.timePerDiv };
+    const wfArgs = {
+      coords,
+      driftOffset,
+      lineWidth,
+      accuracyUncertain: state.accuracyUncertain,
+      divisionsX: coords.divisionsX,
+      timePerDiv: state.timePerDiv,
+      horizontalPosition: state.horizontalPosition,
+    };
 
     // CH1
     if (state.ch[1].visible) {
@@ -48,7 +56,7 @@ export class DynamicLayer {
 
   // ── Waveform ─────────────────────────────────────────────────────────────
 
-  #drawWaveform(ctx, { coords, ch, signal, driftOffset, lineWidth, accuracyUncertain, divisionsX, timePerDiv }) {
+  #drawWaveform(ctx, { coords, ch, signal, driftOffset, lineWidth, accuracyUncertain, divisionsX, timePerDiv, horizontalPosition }) {
     const { gridLeft, gridTop, gridWidth, gridHeight, pxPerDivX, pxPerDivY, centerX, centerY } = coords;
     const { voltsPerDiv, verticalPosition, coupling, invert } = ch;
 
@@ -59,10 +67,11 @@ export class DynamicLayer {
     } else if (coupling === 'CA' && signal) {
       // Estimar DC offset: promedio de 64 samples en el span visible
       const span = divisionsX * timePerDiv;
+      const start = (-divisionsX / 2 - driftOffset) * timePerDiv - horizontalPosition;
       let sum = 0;
       const N = 64;
       for (let i = 0; i < N; i++) {
-        sum += signal.sample(-span / 2 + (i / N) * span);
+        sum += signal.sample(start + (i / N) * span);
       }
       const dcOffset = sum / N;
       sampleFn = (t) => signal.sample(t) - dcOffset;
@@ -88,7 +97,7 @@ export class DynamicLayer {
     for (let i = 0; i <= steps; i++) {
       const px   = gridLeft + (i / steps) * gridWidth;
       const divX = (px - centerX) / pxPerDivX;
-      const t    = (divX - driftOffset) * timePerDiv;
+      const t    = (divX - driftOffset) * timePerDiv - horizontalPosition;
       let v      = sampleFn(t);
       if (invert === 'SI') v = -v;
       const divY = v / voltsPerDiv + verticalPosition;

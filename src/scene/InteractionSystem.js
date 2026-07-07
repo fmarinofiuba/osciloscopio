@@ -2,6 +2,19 @@ import * as THREE from 'three'
 
 const HOVER_DELAY_MS = 300
 const DRAG_SENSITIVITY_PX = 12  // pixels per step change
+const IMPLEMENTED_BUTTON_CONTROLS = new Set([
+  'power',
+  'runStop',
+  'ch1Menu',
+  'ch2Menu',
+  'triggerMenu',
+  'cursor',
+  'softKey1',
+  'softKey2',
+  'softKey3',
+  'softKey4',
+  'softKey5',
+])
 
 export class InteractionSystem {
   constructor(camera, canvas, controlsConfig, controlsState, cameraController) {
@@ -63,7 +76,48 @@ export class InteractionSystem {
       this._controlToMesh.set(ctrl.control, child)
       this._interactiveMeshes.push(child)
     })
+    this._registerProbeConnectorHitbox(model, 1, 'probeCon1')
+    this._registerProbeConnectorHitbox(model, 2, 'probeCon2')
     console.log(`InteractionSystem: registered ${this._interactiveMeshes.length} interactive meshes`)
+  }
+
+  _registerProbeConnectorHitbox(model, channel, objectName) {
+    const source = model.getObjectByName(objectName)
+    if (!source) {
+      console.warn(`InteractionSystem: object "${objectName}" not found in model`)
+      return
+    }
+
+    source.updateWorldMatrix(true, true)
+    const box = new THREE.Box3().setFromObject(source)
+    if (box.isEmpty()) return
+
+    const size = box.getSize(new THREE.Vector3())
+    const center = box.getCenter(new THREE.Vector3())
+    const geometry = new THREE.BoxGeometry(size.x, size.y, size.z)
+    const material = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    })
+    const hitbox = new THREE.Mesh(geometry, material)
+    hitbox.name = `${objectName}_hitbox`
+    hitbox.position.copy(center)
+    hitbox.userData.isProbeConnectorHitbox = true
+    model.add(hitbox)
+
+    const ctrl = {
+      type: 'probeConnector',
+      control: `probeConnector${channel}`,
+      channel,
+      outlineObject: source,
+      tooltip: {
+        title: `CH${channel}`,
+        description: `Configurar entrada CH${channel}`,
+      },
+    }
+    this._meshToControl.set(hitbox.uuid, ctrl)
+    this._interactiveMeshes.push(hitbox)
   }
 
   setOutlinePass(pass) {
@@ -124,16 +178,24 @@ export class InteractionSystem {
 
   // ── Hover helpers ─────────────────────────────────────────────────────────
 
+  _shouldOutline(ctrl) {
+    if (ctrl.type === 'button') {
+      return IMPLEMENTED_BUTTON_CONTROLS.has(ctrl.control)
+    }
+    return true
+  }
+
   _setHover(ctrl, mesh) {
     if (this._hoveredControl === ctrl) return
     this._clearHover()
     this._hoveredControl = ctrl
+    const outlineObject = ctrl.outlineObject ?? mesh
     if (this._outlinePass) {
-      this._outlinePass.selectedObjects = [mesh]
+      this._outlinePass.selectedObjects = this._shouldOutline(ctrl) ? [outlineObject] : []
     }
     clearTimeout(this._hoverTimerId)
     this._hoverTimerId = setTimeout(() => {
-      const pos = this._meshScreenPos(mesh)
+      const pos = this._meshScreenPos(outlineObject)
       this._callbacks.onHover?.(pos.x, pos.y, ctrl)
     }, HOVER_DELAY_MS)
   }
@@ -240,6 +302,11 @@ export class InteractionSystem {
 
     const hit = this._raycast(event)
     if (!hit) return
+
+    if (hit.ctrl.type === 'probeConnector') {
+      this._callbacks.onProbeConnectorClick?.(hit.ctrl.channel)
+      return
+    }
 
     if (this._interactionMode === 'explicar') {
       this._callbacks.onControlClick?.(hit.ctrl)

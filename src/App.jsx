@@ -4,6 +4,7 @@ import { useThreeScene } from './scene/useThreeScene.js'
 import WorkspacePanel from './ui/components/WorkspacePanel.jsx'
 import BottomToolbar from './ui/components/BottomToolbar.jsx'
 import Tooltip3D from './ui/components/Tooltip3D.jsx'
+import ChannelPopup from './ui/workspace/ChannelPopup.jsx'
 import { InputSignalManager } from './signals/InputSignalManager.js'
 import { ExerciseManager } from './exercises/ExerciseManager.js'
 
@@ -32,8 +33,10 @@ function AppInner() {
     exerciseManagerRef,
   } = useAppState()
   const [tooltip, setTooltip] = useState(TOOLTIP_HIDDEN)
+  const [channelPopup, setChannelPopup] = useState(null)
   const interactionModeRef = useRef(state.interactionMode)
   const panelStateInitialized = useRef(false)
+  const poweredRef = useRef(true)
 
   // Sync sceneRef into context so BottomToolbar can call camera methods
   useEffect(() => {
@@ -75,6 +78,7 @@ function AppInner() {
       if (!scene || !renderer) { id = setTimeout(tryWire, 150); return }
 
       signalManagerRef.current.attachRenderer(renderer)
+      scene.setPowered?.(poweredRef.current)
 
       scene.setCallbacks({
         onHover: (x, y, ctrl) => {
@@ -96,6 +100,10 @@ function AppInner() {
           if (interactionModeRef.current === 'explicar') {
             dispatch({ type: 'EXPAND_PANEL' })
           }
+        },
+        onProbeConnectorClick: (channel) => {
+          setTooltip(TOOLTIP_HIDDEN)
+          setChannelPopup(channel)
         },
 
         onKnobChanged: (ctrl, rawValue) => {
@@ -147,6 +155,10 @@ function AppInner() {
           const r = scene.getDisplayRenderer()
           if (!r) return
           switch (ctrl.control) {
+            case 'power':
+              poweredRef.current = !poweredRef.current
+              scene.setPowered?.(poweredRef.current)
+              break
             case 'runStop':
               r.running = pressed
               break
@@ -175,6 +187,19 @@ function AppInner() {
     return () => clearTimeout(id)
   }, [])
 
+  useEffect(() => {
+    const manager = signalManagerRef.current
+    if (!manager) return undefined
+
+    const syncConnectors = () => {
+      sceneRef.current?.setProbeCableVisible?.(1, manager.ch1Visible)
+      sceneRef.current?.setProbeCableVisible?.(2, manager.ch2Visible)
+    }
+
+    syncConnectors()
+    return manager.subscribe(syncConnectors)
+  }, [])
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#cccccc]">
       {/* Three.js canvas — fills entire screen */}
@@ -195,6 +220,7 @@ function AppInner() {
       {/* Floating tooltip: shows knob live value during drag (any mode) and
           informational tooltips while the Explicar section is active. */}
       <Tooltip3D tooltip={tooltip} />
+      <ChannelPopup channel={channelPopup} onClose={() => setChannelPopup(null)} />
     </div>
   )
 }

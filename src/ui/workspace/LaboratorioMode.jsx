@@ -58,32 +58,33 @@ function ParamSlider({ label, value, onChange, range, disabled }) {
   )
 }
 
-function ChannelSection({ name, params, onChange, disabled, active, onToggle, canToggle }) {
+export function ChannelSection({ name, params, onChange, disabled, active, onToggle, canToggle }) {
   const type = params.type ?? 'sine'
   const isDisabled = disabled || !active
 
   return (
-    <div className={`rounded-lg border bg-white/3 p-3 space-y-3 transition-colors ${
-      active ? 'border-panel-border' : 'border-panel-border/40 opacity-60'
-    }`}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-text-primary text-xs font-semibold uppercase tracking-wider">{name}</h3>
-        <div className="flex items-center gap-2">
-          {canToggle && (
-            <button
-              onClick={onToggle}
-              disabled={disabled}
-              className={`
-                text-[10px] px-2 py-0.5 rounded border font-semibold transition-colors
-                ${active
-                  ? 'bg-green-500/15 text-green-400 border-green-500/40 hover:bg-green-500/25'
-                  : 'bg-white/3 text-text-muted border-panel-border hover:bg-white/8'}
-                disabled:opacity-40
-              `}
-            >
-              {active ? 'ON' : 'OFF'}
-            </button>
-          )}
+    <div className="space-y-2">
+      {canToggle && (
+        <button
+          onClick={onToggle}
+          disabled={disabled}
+          className={`
+            w-full px-3 py-2 rounded-md border text-xs font-semibold transition-colors
+            ${active
+              ? 'bg-red-500/10 text-red-300 border-red-500/35 hover:bg-red-500/18'
+              : 'bg-green-500/15 text-green-300 border-green-500/40 hover:bg-green-500/25'}
+            disabled:opacity-40
+          `}
+        >
+          {active ? 'Desconectar' : 'Conectar'}
+        </button>
+      )}
+
+      <div className={`rounded-lg border bg-white/3 p-3 space-y-3 transition-colors ${
+        active ? 'border-panel-border' : 'border-panel-border/40 opacity-60'
+      }`}>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-text-primary text-xs font-semibold uppercase tracking-wider">{name}</h3>
           <div className="flex gap-1">
             {SIGNAL_TYPES.map(({ key, label }) => (
               <button
@@ -102,7 +103,6 @@ function ChannelSection({ name, params, onChange, disabled, active, onToggle, ca
               </button>
             ))}
           </div>
-        </div>
       </div>
 
       <ParamSlider
@@ -162,6 +162,7 @@ function ChannelSection({ name, params, onChange, disabled, active, onToggle, ca
           />
         </>
       )}
+      </div>
     </div>
   )
 }
@@ -170,7 +171,7 @@ function serializeParams(p) {
   return `${p.type}|${p.amplitude}|${p.frequency}|${p.phase}|${p.offset}|${p.dutyCycle}|${p.tau}`
 }
 
-function useSignalManager() {
+export function useSignalManager() {
   const { signalManagerRef } = useAppState()
   const manager = signalManagerRef.current
 

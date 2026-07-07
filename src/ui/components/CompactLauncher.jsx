@@ -4,7 +4,7 @@ export default function CompactLauncher() {
   const { dispatch } = useAppState()
 
   function expand() {
-    dispatch({ type: 'SET_WORKSPACE_MODE', payload: 'laboratorio' })
+    dispatch({ type: 'SET_WORKSPACE_MODE', payload: 'explicar' })
   }
 
   return (

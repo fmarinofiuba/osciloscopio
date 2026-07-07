@@ -34,7 +34,7 @@ export class InputSignalManager {
     this._renderer = null
     this._listeners = new Set()
 
-    this._ch1 = { params: { ...ch1 }, signal: createSignal(ch1), visible: true }
+    this._ch1 = { params: { ...ch1 }, signal: createSignal(ch1), visible: false }
     this._ch2 = { params: { ...ch2 }, signal: createSignal(ch2), visible: false }
 
     this._userSnapshot = null
@@ -53,8 +53,9 @@ export class InputSignalManager {
   attachRenderer(renderer) {
     this._renderer = renderer
     if (renderer) {
-      renderer.signal1 = this._ch1.signal
+      renderer.signal1 = this._ch1.visible ? this._ch1.signal : null
       renderer.signal2 = this._ch2.visible ? this._ch2.signal : null
+      renderer.setChannelVisible(1, this._ch1.visible)
       renderer.setChannelVisible(2, this._ch2.visible)
     }
   }
@@ -112,7 +113,7 @@ export class InputSignalManager {
     if (nextParams.type !== prevType) {
       channel.signal = createSignal(nextParams)
       if (this._renderer) {
-        if (isCh1) this._renderer.signal1 = channel.signal
+        if (isCh1 && channel.visible) this._renderer.signal1 = channel.signal
         else if (channel.visible) this._renderer.signal2 = channel.signal
       }
       return
@@ -165,7 +166,7 @@ export class InputSignalManager {
     channel.params = { ...channel.params, ...params }
     channel.signal = createSignal(channel.params)
     if (this._renderer) {
-      if (isCh1) this._renderer.signal1 = channel.signal
+      if (isCh1 && channel.visible) this._renderer.signal1 = channel.signal
       else if (channel.visible) this._renderer.signal2 = channel.signal
     }
   }

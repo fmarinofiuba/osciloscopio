@@ -21,6 +21,7 @@ export class SceneManager {
     this._outlinePass = null;
     this._displayRenderer = null;
     this._displayTexture = null;
+    this._screenMesh = null;
     this._interactionSystem = null;
     this._controlsState = null;
     this._animFrameId = null;
@@ -122,7 +123,7 @@ export class SceneManager {
     this._outlinePass.edgeThickness = 2;
     this._outlinePass.pulsePeriod = 1;
     this._outlinePass.visibleEdgeColor.set("#4da6ff");
-    this._outlinePass.hiddenEdgeColor.set("#000000");
+    this._outlinePass.hiddenEdgeColor.set("#4da6ff");
     this._composer.addPass(this._outlinePass);
     this._composer.addPass(new OutputPass());
 
@@ -131,7 +132,7 @@ export class SceneManager {
 
     // Load GLTF model
     try {
-      const model = await ModelLoader.load("models/osciloscopio.glb");
+      const model = await ModelLoader.load("models/osciloscopio v4.glb");
       model.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
@@ -140,6 +141,12 @@ export class SceneManager {
       });
       this.scene.add(model);
       this._model = model;
+      this._probeCableObjects = {
+        1: model.getObjectByName("conector1"),
+        2: model.getObjectByName("conector2"),
+      };
+      this.setProbeCableVisible(1, false);
+      this.setProbeCableVisible(2, false);
 
       // DisplayRenderer on "screen" mesh
       this._setupDisplay(model);
@@ -158,6 +165,7 @@ export class SceneManager {
         onHover: (x, y, ctrl) => this._callbacks.onHover?.(x, y, ctrl),
         onHoverEnd: () => this._callbacks.onHoverEnd?.(),
         onControlClick: (ctrl) => this._callbacks.onControlClick?.(ctrl),
+        onProbeConnectorClick: (channel) => this._callbacks.onProbeConnectorClick?.(channel),
         onKnobChanged: (ctrl, value) => this._callbacks.onKnobChanged?.(ctrl, value),
         onButtonChanged: (ctrl, state) => this._callbacks.onButtonChanged?.(ctrl, state),
       });
@@ -178,8 +186,10 @@ export class SceneManager {
       console.warn('SceneManager: mesh "screen" not found in model');
       return;
     }
+    this._screenMesh = screenMesh;
 
     this._displayRenderer = new DisplayRenderer({ width: 640, height: 480 });
+    this._displayRenderer.powered = true;
     this._displayRenderer.triggerLevel = 0;
     this._displayRenderer.voltsPerDiv = 1;
     this._displayRenderer.timePerDiv = 1e-3;
@@ -191,7 +201,7 @@ export class SceneManager {
     texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.magFilter = THREE.LinearMipmapLinearFilter;
 
-    screenMesh.material = new THREE.MeshBasicMaterial({ map: texture });
+    screenMesh.material = new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff });
     this._displayTexture = texture;
   }
 
@@ -236,6 +246,22 @@ export class SceneManager {
     return this._displayRenderer;
   }
 
+  setProbeCableVisible(channel, visible) {
+    const object = this._probeCableObjects?.[channel];
+    if (object) object.visible = visible;
+  }
+
+  setPowered(powered) {
+    if (this._displayRenderer) {
+      this._displayRenderer.powered = powered;
+      this._displayRenderer.render(performance.now() / 1000);
+    }
+    if (this._displayTexture) this._displayTexture.needsUpdate = true;
+    if (this._screenMesh?.material) {
+      this._screenMesh.material.color.set(powered ? "#ffffff" : "#262626");
+    }
+  }
+
   transitionToView(name) {
     this.cameraController?.setView(name);
   }
@@ -272,6 +298,7 @@ export class SceneManager {
         onHover: (x, y, ctrl) => this._callbacks.onHover?.(x, y, ctrl),
         onHoverEnd: () => this._callbacks.onHoverEnd?.(),
         onControlClick: (ctrl) => this._callbacks.onControlClick?.(ctrl),
+        onProbeConnectorClick: (channel) => this._callbacks.onProbeConnectorClick?.(channel),
         onKnobChanged: (ctrl, value) => this._callbacks.onKnobChanged?.(ctrl, value),
         onButtonChanged: (ctrl, state) => this._callbacks.onButtonChanged?.(ctrl, state),
       });

@@ -1,11 +1,10 @@
 import { useAppState } from '../../state/AppContext.jsx'
 
 const MODES = [
-  { key: 'laboratorio',    label: 'Lab',           icon: '◎' },
-  { key: 'explicar',       label: 'Explicar',      icon: '💡' },
-  { key: 'ejercicios',     label: 'Ejercicios',    icon: '✦' },
-  { key: 'manual',         label: 'Manual',        icon: '📖' },
-  { key: 'configuracion',  label: 'Config',        icon: '⚙' },
+  { key: 'ejercicios', label: 'Ejercicios', icon: '*' },
+  { key: 'explicar', label: 'Explicar', icon: '?' },
+  { key: 'manual', label: 'Manual', icon: 'M' },
+  { key: 'configuracion', label: 'Config', icon: 'C' },
 ]
 
 export default function PanelHeader() {
@@ -21,7 +20,6 @@ export default function PanelHeader() {
 
   return (
     <div className="flex-shrink-0 border-b border-panel-border">
-      {/* Mode navigation */}
       <div className="flex items-center px-2 pt-2">
         {MODES.map(({ key, label, icon }) => {
           const isActive = state.workspaceMode === key
@@ -46,7 +44,6 @@ export default function PanelHeader() {
 
         <div className="flex-1" />
 
-        {/* Collapse button */}
         <button
           onClick={collapse}
           className="
@@ -55,7 +52,7 @@ export default function PanelHeader() {
           "
           title="Colapsar panel"
         >
-          ✕
+          x
         </button>
       </div>
     </div>
