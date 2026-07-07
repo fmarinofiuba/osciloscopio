@@ -9,6 +9,7 @@
  */
 
 const FONT = 'ui-monospace, "Courier New", monospace';
+const SLOT_AREA_SCALE = 0.82;
 
 export class MenuLayer {
   constructor(canvas) {
@@ -36,7 +37,7 @@ export class MenuLayer {
 
     // ── 5 Slots ───────────────────────────────────────────────────────────────
     const SLOT_COUNT = 5;
-    const slotAreaH = height - TITLE_H;
+    const slotAreaH = Math.floor((height - TITLE_H) * SLOT_AREA_SCALE);
     const slotH = Math.floor(slotAreaH / SLOT_COUNT);
 
     for (let i = 0; i < SLOT_COUNT; i++) {

@@ -64,7 +64,7 @@ export class TriggerEngine {
     if (state.trigger.mode === 'Único') {
       if (this._singleFired) {
         this._lastDriftTime = null;
-        return { driftOffset: this._driftOffset, triggerStatus: 'stop', singleCompleted: false };
+        return { driftOffset: this._driftOffset, triggerStatus: 'triggered', singleCompleted: false };
       }
       if (tTrig !== null) {
         this._driftOffset = -tTrig / state.timePerDiv;

@@ -1,0 +1,2 @@
+la ultima version del modelo esta en .blender porque desde max 2020 no funciona la exportacion a GLB
+si hay que pasar algo a max o de vuelta a blender usar .FBX

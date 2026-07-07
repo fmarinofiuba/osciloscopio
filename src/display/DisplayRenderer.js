@@ -308,6 +308,10 @@ export class DisplayRenderer {
       state[item.key] = prev === 'A' ? 'B' : 'A';
     }
 
+    if (this._activeMenu === 'trigger' && item.key === 'mode' && state[item.key] !== prev) {
+      this._triggerEngine.resetSingle();
+    }
+
     // Marcar accuracyUncertain si es necesario
     if (!this._state.running) {
       if ((this._activeMenu === 'ch1' || this._activeMenu === 'ch2') && ACCURACY_KEYS.has(item.key)) {
@@ -356,13 +360,8 @@ export class DisplayRenderer {
     this._state.syncFromMenuState(this._menuState);
 
     // 2. Motor de trigger
-    const { driftOffset, triggerStatus, singleCompleted } =
+    const { driftOffset, triggerStatus } =
       this._triggerEngine.update(now, this._state, this._divisionsX);
-
-    if (singleCompleted) {
-      this._state.running = false;
-      this.invalidateDynamic();
-    }
 
     if (driftOffset !== this._prevDriftOffset) {
       this._prevDriftOffset = driftOffset;
