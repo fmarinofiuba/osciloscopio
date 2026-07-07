@@ -37,7 +37,7 @@ export class SceneManager {
     this.scene.background = new THREE.Color("#cccccc");
 
     // Equirectangular 360 background
-    new THREE.TextureLoader().load("/maps/background01.png", (texture) => {
+    new THREE.TextureLoader().load("./maps/background01.png", (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       texture.colorSpace = THREE.SRGBColorSpace;
       this.scene.background = texture;
