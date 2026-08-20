@@ -19,6 +19,8 @@ export class SceneManager {
     this.cameraController = null;
     this._composer = null;
     this._outlinePass = null;
+    this._outputPass = null;
+    this._backgroundTexture = null;
     this._displayRenderer = null;
     this._displayTexture = null;
     this._screenMesh = null;
@@ -30,6 +32,8 @@ export class SceneManager {
   }
 
   async setup() {
+    if (this._disposed) return;
+
     const { canvas } = this;
 
     // Scene
@@ -38,8 +42,13 @@ export class SceneManager {
 
     // Equirectangular 360 background
     new THREE.TextureLoader().load("./maps/background01.png", (texture) => {
+      if (this._disposed) {
+        texture.dispose();
+        return;
+      }
       texture.mapping = THREE.EquirectangularReflectionMapping;
       texture.colorSpace = THREE.SRGBColorSpace;
+      this._backgroundTexture = texture;
       this.scene.background = texture;
     });
 
@@ -111,7 +120,6 @@ export class SceneManager {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     this._composer = new EffectComposer(this.renderer);
-    this._setComposerMultisampling(4);
     this._composer.addPass(new RenderPass(this.scene, this.camera));
 
     this._outlinePass = new OutlinePass(
@@ -126,14 +134,20 @@ export class SceneManager {
     this._outlinePass.visibleEdgeColor.set("#4da6ff");
     this._outlinePass.hiddenEdgeColor.set("#4da6ff");
     this._composer.addPass(this._outlinePass);
-    this._composer.addPass(new OutputPass());
+    this._outputPass = new OutputPass();
+    this._composer.addPass(this._outputPass);
 
     // Controls state
     this._controlsState = new ControlsState(controlsConfig);
 
     // Load GLTF model
     try {
-      const model = await ModelLoader.load("models/osciloscopio_v4.glb");
+      const modelUrl = new URL("../../models/osciloscopio_v4.glb", import.meta.url).href;
+      const model = await ModelLoader.load(modelUrl);
+      if (this._disposed) {
+        this._disposeObject3D(model);
+        return;
+      }
       model.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
@@ -172,8 +186,10 @@ export class SceneManager {
         onButtonChanged: (ctrl, state) => this._callbacks.onButtonChanged?.(ctrl, state),
       });
     } catch (err) {
-      console.error("Error loading model:", err);
+      if (!this._disposed) console.error("Error loading model:", err);
     }
+
+    if (this._disposed) return;
 
     // Resize observer
     this._resizeObserver = new ResizeObserver(() => this._onResize());
@@ -204,16 +220,6 @@ export class SceneManager {
 
     screenMesh.material = new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff });
     this._displayTexture = texture;
-  }
-
-  _setComposerMultisampling(samples) {
-    if (!this.renderer?.capabilities.isWebGL2 || !this._composer) return;
-    const targetSamples = Math.min(samples, 8);
-    for (const target of [this._composer.renderTarget1, this._composer.renderTarget2]) {
-      if (target && "samples" in target) {
-        target.samples = targetSamples;
-      }
-    }
   }
 
   _configureMaterialTextureSampling(material) {
@@ -256,6 +262,31 @@ export class SceneManager {
     const width = image?.width;
     const height = image?.height;
     return THREE.MathUtils.isPowerOfTwo(width) && THREE.MathUtils.isPowerOfTwo(height);
+  }
+
+  _disposeObject3D(object) {
+    if (!object) return;
+    const geometries = new Set();
+    const materials = new Set();
+    const textures = new Set();
+
+    object.traverse((child) => {
+      if (child.geometry) geometries.add(child.geometry);
+      const childMaterials = Array.isArray(child.material)
+        ? child.material
+        : [child.material];
+      for (const material of childMaterials) {
+        if (!material) continue;
+        materials.add(material);
+        for (const value of Object.values(material)) {
+          if (value?.isTexture) textures.add(value);
+        }
+      }
+    });
+
+    for (const texture of textures) texture.dispose();
+    for (const material of materials) material.dispose();
+    for (const geometry of geometries) geometry.dispose();
   }
 
   _onResize() {
@@ -359,12 +390,17 @@ export class SceneManager {
   }
 
   dispose() {
+    if (this._disposed) return;
     this._disposed = true;
     if (this._animFrameId) cancelAnimationFrame(this._animFrameId);
     this._resizeObserver?.disconnect();
     this.cameraController?.dispose();
     this._interactionSystem?.dispose();
+    this._disposeObject3D(this._model);
+    this._backgroundTexture?.dispose();
     this._displayTexture?.dispose();
+    this._outlinePass?.dispose();
+    this._outputPass?.dispose();
     this._composer?.dispose();
     this.renderer?.dispose();
   }
