@@ -6,6 +6,7 @@ import BottomToolbar from './ui/components/BottomToolbar.jsx'
 import Tooltip3D from './ui/components/Tooltip3D.jsx'
 import WelcomePopup from './ui/components/WelcomePopup.jsx'
 import ChannelPopup from './ui/workspace/ChannelPopup.jsx'
+import CompactExperienceUI from './ui/components/CompactExperienceUI.jsx'
 import { InputSignalManager } from './signals/InputSignalManager.js'
 import { ExerciseManager } from './exercises/ExerciseManager.js'
 
@@ -22,9 +23,31 @@ function parseVoltsValue(s) {
 }
 
 const TOOLTIP_HIDDEN = { visible: false, x: 0, y: 0, title: '', description: '', liveValue: null }
+const AR_INITIAL = {
+  supported: false,
+  starting: false,
+  presenting: false,
+  placement: 'idle',
+  error: null,
+}
+
+function useCompactViewport() {
+  const query = '(max-width: 760px), (pointer: coarse) and (max-width: 1180px)'
+  const [compact, setCompact] = useState(() => window.matchMedia(query).matches)
+
+  useEffect(() => {
+    const media = window.matchMedia(query)
+    const update = () => setCompact(media.matches)
+    media.addEventListener?.('change', update)
+    return () => media.removeEventListener?.('change', update)
+  }, [])
+
+  return compact
+}
 
 function AppInner() {
   const canvasRef = useRef(null)
+  const overlayRef = useRef(null)
   const sceneRef = useThreeScene(canvasRef)
   const {
     state,
@@ -35,14 +58,71 @@ function AppInner() {
   } = useAppState()
   const [tooltip, setTooltip] = useState(TOOLTIP_HIDDEN)
   const [channelPopup, setChannelPopup] = useState(null)
+  const [arState, setARState] = useState(AR_INITIAL)
+  const isCompact = useCompactViewport()
   const interactionModeRef = useRef(state.interactionMode)
   const panelStateInitialized = useRef(false)
   const poweredRef = useRef(true)
+  const arPresentingRef = useRef(false)
+  const preARStateRef = useRef(null)
 
   // Sync sceneRef into context so BottomToolbar can call camera methods
   useEffect(() => {
     ctxSceneRef.current = sceneRef.current
   })
+
+  useEffect(() => {
+    let cancelled = false
+    let timerId
+
+    async function checkSupport() {
+      const scene = sceneRef.current
+      if (!scene?.isReady?.()) {
+        timerId = window.setTimeout(checkSupport, 100)
+        return
+      }
+      const supported = await scene.isARSupported()
+      if (!cancelled) {
+        setARState((current) => ({
+          ...current,
+          supported,
+          error: !window.isSecureContext ? 'La realidad aumentada requiere abrir la app mediante HTTPS.' : current.error,
+        }))
+      }
+    }
+
+    checkSupport()
+    return () => {
+      cancelled = true
+      window.clearTimeout(timerId)
+    }
+  }, [])
+
+  useEffect(() => {
+    let timerId
+    function syncFraming() {
+      const scene = sceneRef.current
+      if (!scene?.isReady?.()) {
+        timerId = window.setTimeout(syncFraming, 100)
+        return
+      }
+      scene.setCompactFraming?.(isCompact)
+    }
+    syncFraming()
+    return () => window.clearTimeout(timerId)
+  }, [isCompact])
+
+  useEffect(() => {
+    const root = overlayRef.current
+    if (!root) return undefined
+    const blockSceneSelection = (event) => {
+      if (event.target instanceof Element && event.target.closest('[data-xr-ui]')) {
+        event.preventDefault()
+      }
+    }
+    root.addEventListener('beforexrselect', blockSceneSelection)
+    return () => root.removeEventListener('beforexrselect', blockSceneSelection)
+  }, [])
 
   // Notify camera when panel expands/collapses — skip initial mount
   useEffect(() => {
@@ -182,11 +262,46 @@ function AppInner() {
             case 'softKey5': r.pressBevelButton(4); break
           }
         },
+
+        onARStateChange: (next) => {
+          if (arPresentingRef.current && !next.presenting && preARStateRef.current) {
+            dispatch({ type: 'SET_INTERACTION_MODE', payload: preARStateRef.current.interactionMode })
+            dispatch({ type: 'SELECT_CONTROL', payload: preARStateRef.current.selectedControl })
+            preARStateRef.current = null
+          }
+          arPresentingRef.current = next.presenting
+          setARState((current) => ({
+            ...current,
+            ...next,
+            starting: false,
+            error: null,
+          }))
+        },
       })
     }
     id = setTimeout(tryWire, 150)
     return () => clearTimeout(id)
   }, [])
+
+  async function startAR() {
+    const scene = sceneRef.current
+    if (!scene) return
+    preARStateRef.current = {
+      interactionMode: state.interactionMode,
+      selectedControl: state.selectedControl,
+    }
+    setARState((current) => ({ ...current, starting: true, error: null }))
+    try {
+      await scene.startAR(overlayRef.current)
+    } catch (error) {
+      preARStateRef.current = null
+      setARState((current) => ({
+        ...current,
+        starting: false,
+        error: error.message,
+      }))
+    }
+  }
 
   useEffect(() => {
     const manager = signalManagerRef.current
@@ -201,6 +316,11 @@ function AppInner() {
     return manager.subscribe(syncConnectors)
   }, [])
 
+  const compactChrome = isCompact || arState.presenting
+  const liveValue = tooltip.visible && tooltip.liveValue != null
+    ? { title: tooltip.title, value: tooltip.liveValue }
+    : null
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#cccccc]">
       {/* Three.js canvas — fills entire screen */}
@@ -209,24 +329,45 @@ function AppInner() {
         className="absolute inset-0 w-full h-full"
       />
 
-      {/* React UI overlay */}
-      <div className="absolute inset-0 pointer-events-none flex flex-col">
-        <div className="flex flex-1 min-h-0">
-          <div className="flex-1" />
-          <WorkspacePanel />
-        </div>
-        <BottomToolbar />
-      </div>
+      <div ref={overlayRef} id="xr-dom-overlay" className="absolute inset-0 pointer-events-none">
+        {compactChrome ? (
+          <CompactExperienceUI
+            arState={arState}
+            liveValue={liveValue}
+            onStartAR={startAR}
+            onResetPlacement={() => sceneRef.current?.resetARPlacement?.()}
+          />
+        ) : (
+          <div className="absolute inset-0 pointer-events-none flex flex-col">
+            <div className="flex flex-1 min-h-0">
+              <div className="flex-1" />
+              <WorkspacePanel />
+            </div>
+            <BottomToolbar />
+          </div>
+        )}
 
-      {/* Floating tooltip: shows knob live value during drag (any mode) and
-          informational tooltips while the Explicar section is active. */}
-      <Tooltip3D tooltip={tooltip} />
-      <WelcomePopup />
-      <ChannelPopup
-        channel={channelPopup?.channel}
-        anchor={channelPopup?.anchor}
-        onClose={() => setChannelPopup(null)}
-      />
+        {!compactChrome && arState.supported && (
+          <button
+            data-xr-ui
+            type="button"
+            onClick={startAR}
+            disabled={arState.starting}
+            className="pointer-events-auto absolute left-4 top-4 z-20 h-11 rounded-md border border-accent/50 bg-accent px-4 text-sm font-semibold text-white shadow-xl shadow-black/30 transition-colors hover:bg-accent-hover disabled:opacity-60"
+          >
+            {arState.starting ? 'Iniciando...' : 'Ver en AR'}
+          </button>
+        )}
+
+        {!compactChrome && <Tooltip3D tooltip={tooltip} />}
+        {!compactChrome && <WelcomePopup />}
+        <ChannelPopup
+          channel={channelPopup?.channel}
+          anchor={channelPopup?.anchor}
+          compact={compactChrome}
+          onClose={() => setChannelPopup(null)}
+        />
+      </div>
     </div>
   )
 }

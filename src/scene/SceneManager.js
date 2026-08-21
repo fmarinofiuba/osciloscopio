@@ -26,9 +26,21 @@ export class SceneManager {
     this._screenMesh = null;
     this._interactionSystem = null;
     this._controlsState = null;
-    this._animFrameId = null;
     this._disposed = false;
     this._callbacks = {};
+    this._isARPresenting = false;
+    this._arPlacement = "idle";
+    this._arSession = null;
+    this._xrReferenceSpace = null;
+    this._hitTestSource = null;
+    this._reticle = null;
+    this._desktopModelTransform = null;
+    this._compactFraming = false;
+    this._tableObject = null;
+    this._desktopTableVisible = true;
+    this._onXRSelectStartBound = (event) => this._onXRSelectStart(event);
+    this._onXRSelectEndBound = (event) => this._onXRSelectEnd(event);
+    this._onXRSessionEndBound = () => this._onXRSessionEnd();
   }
 
   async setup() {
@@ -49,7 +61,7 @@ export class SceneManager {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       texture.colorSpace = THREE.SRGBColorSpace;
       this._backgroundTexture = texture;
-      this.scene.background = texture;
+      if (!this._isARPresenting) this.scene.background = texture;
     });
 
     // Camera
@@ -61,7 +73,8 @@ export class SceneManager {
     );
 
     // Renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    this.renderer.xr.enabled = true;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     this.renderer.shadowMap.enabled = true;
@@ -106,6 +119,13 @@ export class SceneManager {
 
     this._targetAxes = new THREE.AxesHelper(1);
     // this.scene.add(this._targetAxes);
+
+    const reticleGeometry = new THREE.RingGeometry(0.035, 0.048, 32).rotateX(-Math.PI / 2);
+    const reticleMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    this._reticle = new THREE.Mesh(reticleGeometry, reticleMaterial);
+    this._reticle.matrixAutoUpdate = false;
+    this._reticle.visible = false;
+    this.scene.add(this._reticle);
 
     // CameraController — tuned to model ~0.3 units
     this.cameraController = new CameraController(this.camera, canvas, {
@@ -157,6 +177,13 @@ export class SceneManager {
       });
       this.scene.add(model);
       this._model = model;
+      this._tableObject = model.getObjectByName("table");
+      this._desktopTableVisible = this._tableObject?.visible ?? true;
+      this._desktopModelTransform = {
+        position: model.position.clone(),
+        quaternion: model.quaternion.clone(),
+        scale: model.scale.clone(),
+      };
       this._probeCableObjects = {
         1: model.getObjectByName("conector1"),
         2: model.getObjectByName("conector2"),
@@ -195,7 +222,7 @@ export class SceneManager {
     this._resizeObserver = new ResizeObserver(() => this._onResize());
     this._resizeObserver.observe(canvas);
 
-    this._animate();
+    this.renderer.setAnimationLoop((time, frame) => this._renderFrame(time, frame));
   }
 
   _setupDisplay(model) {
@@ -296,20 +323,24 @@ export class SceneManager {
     const h = canvas.clientHeight;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h, false);
+    if (!this._isARPresenting) renderer.setSize(w, h, false);
     this._composer?.setSize(w, h);
     if (this._outlinePass) {
       this._outlinePass.resolution.set(w, h);
     }
+    if (this._compactFraming && !this._isARPresenting) this._frameModelForCompact(1);
   }
 
-  _animate() {
+  _renderFrame(time, frame) {
     if (this._disposed) return;
-    this._animFrameId = requestAnimationFrame(() => this._animate());
-    this.cameraController?.update();
+    if (this._isARPresenting && frame) {
+      this._updateARFrame(frame);
+    } else {
+      this.cameraController?.update();
+    }
 
     if (this._displayRenderer) {
-      this._displayRenderer.render(performance.now() / 1000);
+      this._displayRenderer.render(time / 1000);
       if (this._displayTexture) this._displayTexture.needsUpdate = true;
     }
 
@@ -317,7 +348,9 @@ export class SceneManager {
       this._targetAxes.position.copy(this.cameraController.target);
     }
 
-    if (this._composer) {
+    if (this._isARPresenting) {
+      this.renderer.render(this.scene, this.camera);
+    } else if (this._composer) {
       this._composer.render();
     } else {
       this.renderer.render(this.scene, this.camera);
@@ -325,6 +358,214 @@ export class SceneManager {
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
+
+  async isARSupported() {
+    if (!window.isSecureContext || !navigator.xr?.isSessionSupported) return false;
+    try {
+      return await navigator.xr.isSessionSupported("immersive-ar");
+    } catch (_) {
+      return false;
+    }
+  }
+
+  isReady() {
+    return Boolean(this.renderer && this._model && this._interactionSystem);
+  }
+
+  setCompactFraming(enabled) {
+    this._compactFraming = enabled;
+    if (enabled && this._model && !this._isARPresenting) this._frameModelForCompact(350);
+  }
+
+  _frameModelForCompact(durationMs) {
+    if (!this._model || !this.cameraController) return;
+    this._model.updateWorldMatrix(true, true);
+    const box = new THREE.Box3();
+
+    this._model.traverse((child) => {
+      if (!child.isMesh || child.userData.isXRControlHitbox || child.userData.isProbeConnectorHitbox) return;
+      let current = child;
+      while (current && current !== this._model) {
+        if (
+          !current.visible ||
+          current.name === "table" ||
+          current.name === "conector1" ||
+          current.name === "conector2"
+        ) return;
+        current = current.parent;
+      }
+      box.expandByObject(child);
+    });
+    if (box.isEmpty()) return;
+
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
+    const fitHeight = size.y / (2 * tanHalfFov);
+    const fitWidth = size.x / (2 * tanHalfFov * this.camera.aspect);
+    const distance = size.z / 2 + Math.max(fitHeight, fitWidth) * 1.12;
+    const origin = center.clone().add(new THREE.Vector3(0, 0, distance));
+    this.cameraController.setView({
+      origin,
+      target: center,
+      durationMs,
+      easing: "easeInOutCubic",
+    });
+  }
+
+  async startAR(overlayRoot) {
+    if (this._isARPresenting) return;
+    if (!this.renderer || !this._model || !this._interactionSystem) {
+      throw new Error("La escena todavia se esta cargando.");
+    }
+    if (!window.isSecureContext) throw new Error("La realidad aumentada requiere HTTPS.");
+    if (!navigator.xr?.requestSession) throw new Error("Este navegador no ofrece WebXR AR.");
+
+    const sessionInit = {
+      requiredFeatures: ["hit-test"],
+      optionalFeatures: ["dom-overlay"],
+    };
+    if (overlayRoot) sessionInit.domOverlay = { root: overlayRoot };
+
+    let session;
+    try {
+      session = await navigator.xr.requestSession("immersive-ar", sessionInit);
+      this.renderer.xr.setReferenceSpaceType("local");
+      await this.renderer.xr.setSession(session);
+      const viewerSpace = await session.requestReferenceSpace("viewer");
+      this._xrReferenceSpace = this.renderer.xr.getReferenceSpace();
+      this._hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
+    } catch (error) {
+      console.error("WebXR session failed:", error);
+      if (session) {
+        try { await session.end(); } catch (_) {}
+      }
+      if (error?.name === "NotAllowedError") {
+        throw new Error("Se cancelo el permiso para iniciar AR.");
+      }
+      const detail = [error?.name, error?.message].filter(Boolean).join(": ");
+      throw new Error(`No se pudo iniciar la sesion AR${detail ? ` (${detail})` : ""}.`);
+    }
+
+    this._arSession = session;
+    this._isARPresenting = true;
+    this._arPlacement = "searching";
+    this.scene.background = null;
+    this._model.visible = false;
+    if (this._tableObject) this._tableObject.visible = false;
+    this._reticle.visible = false;
+    this.cameraController?.setEnabled(false);
+    this._interactionSystem.setPointerEnabled(false);
+    document.body.classList.add("xr-presenting");
+
+    session.addEventListener("selectstart", this._onXRSelectStartBound);
+    session.addEventListener("selectend", this._onXRSelectEndBound);
+    session.addEventListener("end", this._onXRSessionEndBound, { once: true });
+    this._emitARState();
+  }
+
+  resetARPlacement() {
+    if (!this._isARPresenting || !this._model) return;
+    this._model.visible = false;
+    this._reticle.visible = false;
+    this._arPlacement = "searching";
+    this._emitARState();
+  }
+
+  _updateARFrame(frame) {
+    if (!this._xrReferenceSpace) return;
+
+    if (this._arPlacement !== "placed" && this._hitTestSource) {
+      const results = frame.getHitTestResults(this._hitTestSource);
+      const pose = results[0]?.getPose(this._xrReferenceSpace);
+      if (pose) {
+        this._reticle.visible = true;
+        this._reticle.matrix.fromArray(pose.transform.matrix);
+        if (this._arPlacement !== "ready") {
+          this._arPlacement = "ready";
+          this._emitARState();
+        }
+      } else {
+        this._reticle.visible = false;
+        if (this._arPlacement !== "searching") {
+          this._arPlacement = "searching";
+          this._emitARState();
+        }
+      }
+    }
+
+    this._interactionSystem?.updateXRInteraction(frame, this._xrReferenceSpace);
+  }
+
+  _onXRSelectStart(event) {
+    if (this._arPlacement === "searching" || this._arPlacement === "ready") {
+      if (this._reticle.visible) this._placeModel(event.frame);
+      return;
+    }
+    this._interactionSystem?.beginXRInteraction(
+      event.inputSource,
+      event.frame,
+      this._xrReferenceSpace,
+    );
+  }
+
+  _onXRSelectEnd(event) {
+    this._interactionSystem?.endXRInteraction(event.inputSource);
+  }
+
+  _placeModel(frame) {
+    const position = new THREE.Vector3();
+    const surfaceRotation = new THREE.Quaternion();
+    const surfaceScale = new THREE.Vector3();
+    this._reticle.matrix.decompose(position, surfaceRotation, surfaceScale);
+
+    const viewerPose = frame?.getViewerPose?.(this._xrReferenceSpace);
+    const viewerPosition = viewerPose?.views?.[0]?.transform?.position;
+    const cameraX = viewerPosition?.x ?? position.x;
+    const cameraZ = viewerPosition?.z ?? position.z + 1;
+
+    this._model.position.copy(position);
+    this._model.rotation.set(0, Math.atan2(cameraX - position.x, cameraZ - position.z), 0);
+    this._model.scale.copy(this._desktopModelTransform.scale);
+    this._model.visible = true;
+    this._reticle.visible = false;
+    this._arPlacement = "placed";
+    this._emitARState();
+  }
+
+  _onXRSessionEnd() {
+    const session = this._arSession;
+    session?.removeEventListener("selectstart", this._onXRSelectStartBound);
+    session?.removeEventListener("selectend", this._onXRSelectEndBound);
+    this._hitTestSource?.cancel?.();
+    this._hitTestSource = null;
+    this._xrReferenceSpace = null;
+    this._arSession = null;
+    this._isARPresenting = false;
+    this._arPlacement = "idle";
+    this._reticle.visible = false;
+
+    if (this._model && this._desktopModelTransform) {
+      this._model.position.copy(this._desktopModelTransform.position);
+      this._model.quaternion.copy(this._desktopModelTransform.quaternion);
+      this._model.scale.copy(this._desktopModelTransform.scale);
+      this._model.visible = true;
+    }
+    if (this._tableObject) this._tableObject.visible = this._desktopTableVisible;
+
+    this.scene.background = this._backgroundTexture ?? new THREE.Color("#cccccc");
+    this.cameraController?.setEnabled(true);
+    this._interactionSystem?.setPointerEnabled(true);
+    document.body.classList.remove("xr-presenting");
+    this._emitARState();
+  }
+
+  _emitARState() {
+    this._callbacks.onARStateChange?.({
+      presenting: this._isARPresenting,
+      placement: this._arPlacement,
+    });
+  }
 
   getDisplayRenderer() {
     return this._displayRenderer;
@@ -392,13 +633,22 @@ export class SceneManager {
   dispose() {
     if (this._disposed) return;
     this._disposed = true;
-    if (this._animFrameId) cancelAnimationFrame(this._animFrameId);
+    this.renderer?.setAnimationLoop(null);
+    if (this._arSession) {
+      this._arSession.removeEventListener("selectstart", this._onXRSelectStartBound);
+      this._arSession.removeEventListener("selectend", this._onXRSelectEndBound);
+      this._arSession.removeEventListener("end", this._onXRSessionEndBound);
+      this._arSession.end().catch(() => {});
+    }
+    this._hitTestSource?.cancel?.();
     this._resizeObserver?.disconnect();
     this.cameraController?.dispose();
     this._interactionSystem?.dispose();
     this._disposeObject3D(this._model);
     this._backgroundTexture?.dispose();
     this._displayTexture?.dispose();
+    this._reticle?.geometry?.dispose();
+    this._reticle?.material?.dispose();
     this._outlinePass?.dispose();
     this._outputPass?.dispose();
     this._composer?.dispose();

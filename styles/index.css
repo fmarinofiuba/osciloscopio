@@ -42,3 +42,11 @@ html, body, #root {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
+
+.compact-sheet {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+body.xr-presenting {
+  background: transparent;
+}

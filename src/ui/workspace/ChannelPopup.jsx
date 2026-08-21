@@ -45,7 +45,7 @@ function getInitialPosition(anchor) {
   }
 }
 
-export default function ChannelPopup({ channel, anchor, onClose }) {
+export default function ChannelPopup({ channel, anchor, onClose, compact = false }) {
   const { state, dispatch } = useAppState()
   const manager = useSignalManager()
   const popupRef = useRef(null)
@@ -54,8 +54,8 @@ export default function ChannelPopup({ channel, anchor, onClose }) {
 
   useEffect(() => {
     if (!channel) return
-    setPosition(getInitialPosition(anchor))
-  }, [channel, anchor])
+    setPosition(compact ? null : getInitialPosition(anchor))
+  }, [channel, anchor, compact])
 
   if (!channel || !manager) return null
 
@@ -66,6 +66,7 @@ export default function ChannelPopup({ channel, anchor, onClose }) {
   const setParams = isCh1 ? manager.setCh1Params.bind(manager) : manager.setCh2Params.bind(manager)
 
   function startDrag(event) {
+    if (compact) return
     if (event.button !== 0) return
     const popup = popupRef.current
     if (!popup) return
@@ -105,19 +106,23 @@ export default function ChannelPopup({ channel, anchor, onClose }) {
     dragRef.current = null
   }
 
-  const floatingStyle = position
-    ? { width: 'min(25vw, 320px)', left: position.left, top: position.top }
-    : { width: 'min(25vw, 320px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }
+  const floatingStyle = compact
+    ? undefined
+    : position
+      ? { width: 'min(25vw, 320px)', left: position.left, top: position.top }
+      : { width: 'min(25vw, 320px)', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }
 
   return (
     <div className="pointer-events-none fixed inset-0 z-30">
       <div
         ref={popupRef}
-        className="
-          pointer-events-auto fixed
-          glass-panel border border-panel-border rounded-lg shadow-2xl shadow-black/50
-          max-h-[78vh] overflow-hidden
-        "
+        data-xr-ui={compact ? true : undefined}
+        className={`
+          pointer-events-auto fixed overflow-hidden border border-panel-border shadow-2xl shadow-black/50
+          ${compact
+            ? 'compact-sheet inset-x-0 bottom-0 mx-auto max-h-[70dvh] w-full max-w-[680px] rounded-t-lg bg-[rgba(12,12,28,0.97)]'
+            : 'glass-panel max-h-[78vh] rounded-lg'}
+        `}
         style={floatingStyle}
       >
         <div
@@ -125,7 +130,7 @@ export default function ChannelPopup({ channel, anchor, onClose }) {
           onPointerMove={moveDrag}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          className="flex cursor-move select-none items-center gap-2 px-3 py-2 border-b border-panel-border"
+          className={`flex select-none items-center gap-2 border-b border-panel-border px-3 py-2 ${compact ? '' : 'cursor-move'}`}
         >
           <div>
             <h2 className="text-text-primary text-sm font-semibold">Canal {channel}</h2>
@@ -148,12 +153,14 @@ export default function ChannelPopup({ channel, anchor, onClose }) {
             <p className="text-text-muted text-xs leading-relaxed">
               Para modificar esta entrada, debe finalizar o abandonar el ejercicio actual.
             </p>
-            <button
-              onClick={() => dispatch({ type: 'SET_WORKSPACE_MODE', payload: 'ejercicios' })}
-              className="px-3 py-2 rounded-md text-xs font-medium bg-accent hover:bg-accent-hover text-white"
-            >
-              Volver al ejercicio
-            </button>
+            {!compact && (
+              <button
+                onClick={() => dispatch({ type: 'SET_WORKSPACE_MODE', payload: 'ejercicios' })}
+                className="px-3 py-2 rounded-md text-xs font-medium bg-accent hover:bg-accent-hover text-white"
+              >
+                Volver al ejercicio
+              </button>
+            )}
           </div>
         ) : (
           <div className="panel-scroll max-h-[68vh] overflow-y-auto p-3">
